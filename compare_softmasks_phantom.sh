@@ -218,9 +218,11 @@ do
     sed 'p' "$DYN_CURRENTS_DIR" > "$DYN_CURRENTS_MODIFIED_DIR"
 done
 
-# Remove the sorted dicoms folder
-echo -e "\nRemoving sorted dicoms folder..."
-rm -r $SORTED_DICOMS_PATH
+# Remove the sorted dicoms folder if necessary
+if [ $VERIFICATION == 1 ]; then
+    echo -e "\nRemoving sorted dicoms folder..."
+    rm -r $SORTED_DICOMS_PATH
+fi
 
 # End of the script
 echo -e "\nProcessing complete. Results saved in $OPTI_OUTPUT_DIR."
