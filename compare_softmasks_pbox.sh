@@ -1,23 +1,15 @@
 #!/bin/bash
 
 echo "
-This script runs the entire experiment for a given subject. It is meant to be run from the command line after
-the baseline MPrage, the baseline field map and one baseline EPI has been acquired. Your dicom folder should be organized as follows:
+This script runs the entire experiment for a given phantom. It is meant to be run from the command line after
+the baseline field map has been acquired. Your dicom folder should be organized as follows:
 
 dicoms
-├── 01_baseline_mprage_t1w (mag)
+├── 01_baseline_GRE (mag)
 │   ├── dicom1
 │   ├── dicom2
 │   └── ...
-├── 02_baseline_GRE (mag)
-│   ├── dicom1
-│   ├── dicom2
-│   └── ...
-|── 03_baseline_GRE (phase)
-|    ├── dicom1
-|    ├── dicom2
-|    └── ...
-|-- 04_baseline_EPI (AP or PA)
+|── 02_baseline_GRE (phase)
 |    ├── dicom1
 |    ├── dicom2
 |    └── ...
@@ -25,7 +17,7 @@ dicoms
 It takes four arguments:
 1. The path to the dicoms directory
 2. The name / tag of the subject
-3. The diameter of the binary mask
+3. The radius for the spherical binary mask
 4. The width of the blur zone. Must be a multiple of 3.
 5. Skip the creation/verification of masks and fieldmap if they already exist (0 for no, 1 for yes)
 
@@ -37,7 +29,7 @@ It includes all niftis and optimization files (currents for the coil, predicted 
 # Check if five arguments are provided
 if [ "$#" -ne 5 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: ./compare_softmask.sh <dicoms_path> <subject_name> <diameter> <blur_width> <verification>"
+    echo "Usage: ./compare_softmask.sh <dicoms_path> <subject_name> <radius> <blur_width> <verification>"
     echo "Example: ./compare_softmask.sh /path/to/dicoms subject_name 25 9 1"
     exit 1
 fi
@@ -45,7 +37,7 @@ fi
 # Assign the arguments to variables
 DICOMS_PATH=$1
 SUBJECT_NAME=$2
-DIAMETER=$3
+RADIUS=$3
 BLUR_WIDTH=$4
 VERIFICATION=$5
 
@@ -78,11 +70,9 @@ fi
 MAGNITUDE_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}" -name "*magnitude1.nii.gz")
 PHASE1_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}" -name "*phase1.nii.gz")
 PHASE2_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}" -name "*phase2.nii.gz")
-EPI_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}/func" -name "*.nii.gz")
-MPRAGE_PATH="${OUTPUT_PATH}sub-${SUBJECT_NAME}/anat/sub-${SUBJECT_NAME}_T1w.nii.gz"
 
 # Check if the files exist
-if [ -z "$MAGNITUDE_PATH" ] || [ -z "$PHASE1_PATH" ] || [ -z "$PHASE2_PATH" ] || [ -z "$EPI_PATH" ]; then
+if [ -z "$MAGNITUDE_PATH" ] || [ -z "$PHASE1_PATH" ] || [ -z "$PHASE2_PATH" ] ; then
     echo "Error: One or more required NIfTI files are missing! Exiting..."
     exit 1
 fi
@@ -94,29 +84,20 @@ if [ ! -d $MASK_DIR ]; then
 fi
 
 # File names of the masks
-FNAME_SEGMENTATION="${MASK_DIR}/segmentation.nii.gz"
 FNAME_BIN_MASK_SCT="${MASK_DIR}/sct_bin_mask.nii.gz"
 FNAME_BIN_MASK_SCT_FM="${MASK_DIR}/sct_bin_mask_fm.nii.gz"
-FNAME_SOFT_MASK_GAUSS_SCT="${MASK_DIR}/sct_soft_mask_gauss.nii.gz"
-FNAME_SOFT_MASK_SUM_ST="${MASK_DIR}/st_soft_mask_sum.nii.gz"
 FNAME_SOFT_MASK_CST_ST="${MASK_DIR}/st_soft_mask_cst.nii.gz"
 FNAME_SOFT_MASK_LIN_ST="${MASK_DIR}/st_soft_mask_lin.nii.gz"
 FNAME_SOFT_MASK_GSS_ST="${MASK_DIR}/st_soft_mask_gss.nii.gz"
 
 # Check if paths exist and skipping the creation of the masks if they do
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ] && [ -f "$FNAME_SOFT_MASK_GAUSS_SCT" ] && [ -f "$FNAME_SOFT_MASK_SUM_ST" ] && [ -f "$FNAME_SOFT_MASK_CST_ST" ] && [ -f "$FNAME_SOFT_MASK_LIN_ST" ] && [ -f "$FNAME_SOFT_MASK_GSS_ST" ]; then
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ] && [ -f "$FNAME_SOFT_MASK_CST_ST" ] && [ -f "$FNAME_SOFT_MASK_LIN_ST" ] && [ -f "$FNAME_SOFT_MASK_GSS_ST" ]; then
     echo -e "\nMasks already exist. Skipping mask creation..."
 else
     # Create masks
-    echo -e "\nCreating segmentation from magnitude image..."
-    sct_deepseg -i "${MPRAGE_PATH}" -c t1 -task seg_sc_contrast_agnostic -o "${FNAME_SEGMENTATION}" || exit
-    echo -e "\nCreating binary masks from segmentation..."
-    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $DIAMETER -f cylinder -o "${FNAME_BIN_MASK_SCT}" || exit
-    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $((DIAMETER + 2 * BLUR_WIDTH + 15)) -f cylinder -o "${FNAME_BIN_MASK_SCT_FM}" || exit
-    echo -e "\nCreating gaussian soft mask from segmentation..."
-    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $DIAMETER -f gaussian -o "${FNAME_SOFT_MASK_GAUSS_SCT}" || exit
-    echo -e "\nAdding the two previous masks..."
-    st_mask gaussian-sct-softmask -ib "${FNAME_BIN_MASK_SCT}" -ig "${FNAME_SOFT_MASK_GAUSS_SCT}" -o "${FNAME_SOFT_MASK_SUM_ST}" || exit
+    echo -e "\nCreating binary masks..."
+    st_mask sphere -i $MAGNITUDE_PATH -o $FNAME_BIN_MASK_SCT -r $RADIUS --center 62 58 18 || exit
+    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_BIN_MASK_SCT_FM}" -b 'constant' -bw $((BLUR_WIDTH + 15)) -bv 1 || exit
     echo -e "\nCreating constant soft mask from the binary mask..."
     st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_CST_ST}" -b 'constant' -bw $BLUR_WIDTH || exit
     echo -e "\nCreating linear soft mask from the binary mask..."
@@ -127,15 +108,13 @@ else
     # Show masks with magnitude
     echo -e "\nDisplaying masks with magnitude image..."
     fsleyes \
-        $MPRAGE_PATH -cm greyscale \
+        $MAGNITUDE_PATH -cm greyscale \
         $FNAME_SOFT_MASK_CST_ST -cm copper -a 50.0 \
         $FNAME_SOFT_MASK_LIN_ST -cm copper -a 50.0 \
         $FNAME_SOFT_MASK_GSS_ST -cm copper -a 50.0 \
-        $FNAME_SOFT_MASK_SUM_ST -cm copper -a 50.0 \
-        $FNAME_BIN_MASK_SCT -cm yellow \
-        $FNAME_SEGMENTATION -cm blue
+        $FNAME_BIN_MASK_SCT -cm yellow
 
-    # Promp user to approve the masks
+    # Prompt user to approve the masks
     echo -e "\nDo the masks look good?"
     echo "1. Yes"
     echo "2. No, exit program"
@@ -167,12 +146,12 @@ else
     # Create fieldmap
     echo -e "\nCreating fieldmap..."
     st_prepare_fieldmap $PHASE1_PATH $PHASE2_PATH \
-     --mag $MAGNITUDE_PATH \
-     --unwrapper prelude \
-     --gaussian-filter true \
-     --mask $FNAME_BIN_MASK_SCT_FM \
-     --sigma 1 \
-     -o $FIELDMAP_PATH
+    --mag $MAGNITUDE_PATH \
+    --unwrapper prelude \
+    --gaussian-filter true \
+    --mask $FNAME_BIN_MASK_SCT_FM \
+    --sigma 1 \
+    -o $FIELDMAP_PATH
 
     # Show fieldmap with magnitude
     echo -e "\nDisplaying fieldmap with magnitude image..."
@@ -199,7 +178,6 @@ else
             exit 1
             ;;
     esac
-
 fi
 
 # Create output directory for the optimizations
@@ -211,7 +189,6 @@ fi
 # Define the masks in a list
 masks=(
     "$FNAME_BIN_MASK_SCT"
-    "$FNAME_SOFT_MASK_SUM_ST"
     "$FNAME_SOFT_MASK_CST_ST"
     "$FNAME_SOFT_MASK_LIN_ST"
     "$FNAME_SOFT_MASK_GSS_ST"
@@ -226,7 +203,7 @@ do
     st_b0shim dynamic \
         --coil $COIL_PATH $COIL_CONFIG_PATH \
         --fmap $FIELDMAP_PATH \
-        --anat $EPI_PATH \
+        --anat $MAGNITUDE_PATH \
         --mask "$mask" \
         --mask-dilation-kernel-size 5 \
         --optimizer-method "pseudo_inverse" \

@@ -97,7 +97,7 @@ else
     # Create masks
     echo -e "\nCreating binary masks..."
     st_mask threshold -i $MAGNITUDE_PATH --thr $THRESHOLD -o $FNAME_BIN_MASK_SCT || exit
-    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_BIN_MASK_SCT_FM}" -b 'constant' -bw $((BLUR_WIDTH * 2)) -bv 1 || exit
+    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_BIN_MASK_SCT_FM}" -b 'constant' -bw $((BLUR_WIDTH + 15)) -bv 1 || exit
     echo -e "\nCreating constant soft mask from the binary mask..."
     st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_CST_ST}" -b 'constant' -bw $BLUR_WIDTH || exit
     echo -e "\nCreating linear soft mask from the binary mask..."
@@ -155,7 +155,9 @@ else
 
     # Show fieldmap with magnitude
     echo -e "\nDisplaying fieldmap with magnitude image..."
-    fsleyes $MAGNITUDE_PATH $FIELDMAP_PATH -dr -100 100
+    fsleyes \
+        $MAGNITUDE_PATH -cm greyscale \
+        $FIELDMAP_PATH -cm brain_colours_diverging_bwr -a 50.0 -dr -100 100
 
     # Prompt user to approve the fieldmap
     echo -e "\nDoes the fieldmap look good?"
