@@ -26,17 +26,19 @@ It takes four arguments:
 1. The path to the dicoms directory
 2. The name / tag of the subject
 3. The diameter of the binary mask
-4. The width of the blur zone
+4. The width of the blur zone. Must be a multiple of 3.
+5. Skip the creation/verification of masks and fieldmap if they already exist (0 for no, 1 for yes)
 
 Outputs:
 - Directory with the nifti files (sub-<subject_name>)
 It includes all niftis and optimization files (currents for the coil, predicted B0 field, etc.)
 "
 
-# Check if four arguments are provided
-if [ "$#" -ne 4 ]; then
+# Check if five arguments are provided
+if [ "$#" -ne 5 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: ./compare_softmask.sh <dicoms_path> <subject_name> <diameter> <blur_width>"
+    echo "Usage: ./compare_softmask.sh <dicoms_path> <subject_name> <diameter> <blur_width> <verification>"
+    echo "Example: ./compare_softmask.sh /path/to/dicoms subject_name 25 9 1"
     exit 1
 fi
 
@@ -45,6 +47,7 @@ DICOMS_PATH=$1
 SUBJECT_NAME=$2
 DIAMETER=$3
 BLUR_WIDTH=$4
+VERIFICATION=$5
 
 # Set file paths
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
@@ -58,13 +61,18 @@ echo Name of the chosen coil : $COIL_NAME
 OUTPUT_PATH="${DICOMS_PATH%/*}/sub-$SUBJECT_NAME/"
 SORTED_DICOMS_PATH="${DICOMS_PATH%/*}/sorted_dicoms_opt/"
 
-# Sorting dicoms
-echo -e "\nSorting dicoms..."
-st_sort_dicoms -i $DICOMS_PATH -o $SORTED_DICOMS_PATH -r
+# Check if the sorted dicoms and nifti conversion have already been done
+if [ $VERIFICATION == 1 ] && [ -d "$OUTPUT_PATH" ]; then
+    echo -e "\nDicoms already sorted and converted to nifti. Skipping these steps..."
+else
+    # Sorting dicoms
+    echo -e "\nSorting dicoms..."
+    st_sort_dicoms -i $DICOMS_PATH -o $SORTED_DICOMS_PATH -r
 
-# Dicoms to nifti
-echo -e "\nConverting dicoms to nifti..."
-st_dicom_to_nifti -i $SORTED_DICOMS_PATH --subject $SUBJECT_NAME -o $OUTPUT_PATH
+    # Dicoms to nifti
+    echo -e "\nConverting dicoms to nifti..."
+    st_dicom_to_nifti -i $SORTED_DICOMS_PATH --subject $SUBJECT_NAME -o $OUTPUT_PATH
+fi
 
 # Set ohter file paths
 MAGNITUDE_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}" -name "*magnitude1.nii.gz")
@@ -96,7 +104,7 @@ FNAME_SOFT_MASK_LIN_ST="${MASK_DIR}/st_soft_mask_lin.nii.gz"
 FNAME_SOFT_MASK_GSS_ST="${MASK_DIR}/st_soft_mask_gss.nii.gz"
 
 # Check if paths exist and skipping the creation of the masks if they do
-if [ -f "$FNAME_BIN_MASK_SCT" ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ] && [ -f "$FNAME_SOFT_MASK_GAUSS_SCT" ] && [ -f "$FNAME_SOFT_MASK_SUM_ST" ] && [ -f "$FNAME_SOFT_MASK_CST_ST" ] && [ -f "$FNAME_SOFT_MASK_LIN_ST" ] && [ -f "$FNAME_SOFT_MASK_GSS_ST" ]; then
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ] && [ -f "$FNAME_SOFT_MASK_GAUSS_SCT" ] && [ -f "$FNAME_SOFT_MASK_SUM_ST" ] && [ -f "$FNAME_SOFT_MASK_CST_ST" ] && [ -f "$FNAME_SOFT_MASK_LIN_ST" ] && [ -f "$FNAME_SOFT_MASK_GSS_ST" ]; then
     echo -e "\nMasks already exist. Skipping mask creation..."
 else
     # Create masks
@@ -146,7 +154,6 @@ else
             exit 1
             ;;
     esac
-
 fi
 
 # File names of the fieldmap
@@ -154,7 +161,7 @@ FIELDMAP_PATH="${OUTPUT_PATH}derivatives/fmap/fieldmap.nii.gz"
 FIELDMAP_JSON_PATH="${OUTPUT_PATH}derivatives/fmap/fieldmap.json"
 
 # Check if the fieldmap already exists and skip the creation if it does
-if [ -f "$FIELDMAP_PATH" ] && [ -f "$FIELDMAP_JSON_PATH" ]; then
+if [ $VERIFICATION == 1 ] && [ -f "$FIELDMAP_PATH" ] && [ -f "$FIELDMAP_JSON_PATH" ]; then
     echo -e "\nFieldmap already exists. Skipping fieldmap creation and validation..."
 else
     # Create fieldmap
@@ -234,9 +241,11 @@ do
     sed 'p' "$DYN_CURRENTS_DIR" > "$DYN_CURRENTS_MODIFIED_DIR"
 done
 
-# Remove the sorted dicoms folder
-echo -e "\nRemoving sorted dicoms folder..."
-rm -r $SORTED_DICOMS_PATH
+# Remove the sorted dicoms folder if necessary
+if [ $VERIFICATION == 1 ]; then
+    echo -e "\nRemoving sorted dicoms folder..."
+    rm -r $SORTED_DICOMS_PATH
+fi
 
 # End of the script
 echo -e "\nProcessing complete. Results saved in $OPTI_OUTPUT_DIR."
