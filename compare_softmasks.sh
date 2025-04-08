@@ -208,6 +208,28 @@ if [ ! -d $OUTPUT_DIR ]; then
     mkdir $OUTPUT_DIR
 fi
 
+# Run the shim for the segmentation
+OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_segmentation"
+echo -e "\nShimming the fieldmap with the segmentation..."
+st_b0shim dynamic \
+    --coil $COIL_PATH $COIL_CONFIG_PATH \
+    --fmap $FIELDMAP_PATH \
+    --anat $EPI_PATH \
+    --mask $FNAME_SEGMENTATION \
+    --mask-dilation-kernel-size 5 \
+    --optimizer-method "pseudo_inverse" \
+    --slices "auto" \
+    --output-file-format-coil "chronological-coil" \
+    --output-value-format "absolute" \
+    --fatsat "yes" \
+    --output "$OUTPUT_DIR"
+
+# Create two files with the same currents, with and without fatsat
+DYN_CURRENTS_DIR="${OUTPUT_DIR}/coefs_coil0_${COIL_NAME}_no_fatsat.txt"
+DYN_CURRENTS_MODIFIED_DIR="${OUTPUT_DIR}/coefs_coil0_${COIL_NAME}_SAME_CURRENTS_FATSAT.txt"
+fatsat=$(sed -n '1p' "$DYN_CURRENTS_DIR")
+sed 'p' "$DYN_CURRENTS_DIR" > "$DYN_CURRENTS_MODIFIED_DIR"
+
 # Define the masks in a list
 masks=(
     "$FNAME_BIN_MASK_SCT"
