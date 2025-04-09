@@ -259,13 +259,13 @@ st_b0shim dynamic \
     --anat $EPI_PATH \
     --mask $FNAME_SEGMENTATION \
     --mask-dilation-kernel-size 5 \
-    --optimizer-criteria "mse" \
+    --optimizer-criteria 'mse_softmasks' \
     --optimizer-method "least_squares" \
     --slices "auto" \
     --output-file-format-coil "chronological-coil" \
     --output-value-format "absolute" \
     --fatsat "yes" \
-    --regularization-factor 0.8 \
+    --regularization-factor 0.3 \
     --output "$OUTPUT_DIR"
 
 # Create two files with the same currents, with and without fatsat
@@ -295,13 +295,13 @@ do
         --anat $EPI_PATH \
         --mask "$mask" \
         --mask-dilation-kernel-size 5 \
-        --optimizer-criteria "mse" \
+        --optimizer-criteria 'mse_softmasks' \
         --optimizer-method "least_squares" \
         --slices "auto" \
         --output-file-format-coil "chronological-coil" \
         --output-value-format "absolute" \
         --fatsat "yes" \
-        --regularization-factor 0.8 \
+        --regularization-factor 0.3 \
         --output "$OUTPUT_DIR"
 
     # Create two files with the same currents, with and without fatsat
