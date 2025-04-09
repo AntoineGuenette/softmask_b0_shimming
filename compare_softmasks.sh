@@ -107,22 +107,64 @@ FNAME_SOFT_MASK_GSS_ST="${MASK_DIR}/st_soft_mask_gss.nii.gz"
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ] && [ -f "$FNAME_SOFT_MASK_GAUSS_SCT" ] && [ -f "$FNAME_SOFT_MASK_SUM_ST" ] && [ -f "$FNAME_SOFT_MASK_CST_ST" ] && [ -f "$FNAME_SOFT_MASK_LIN_ST" ] && [ -f "$FNAME_SOFT_MASK_GSS_ST" ]; then
     echo -e "\nMasks already exist. Skipping mask creation..."
 else
+
     # Create masks
+
     echo -e "\nCreating segmentation from magnitude image..."
+    start_time=$(gdate +%s%3N)
     sct_deepseg -i "${MPRAGE_PATH}" -c t1 -task seg_sc_contrast_agnostic -o "${FNAME_SEGMENTATION}" || exit
-    echo -e "\nCreating binary masks from segmentation..."
+    end_time=$(gdate +%s%3N)
+    elapsed_time_ms=$((end_time - start_time))
+    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
+    echo -e "\nSegmentation mask (seg) created in $elapsed_time_sec seconds."
+    
+    echo -e "\nCreating binary mask from segmentation..."
+    start_time=$(gdate +%s%3N)
     sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $DIAMETER -f cylinder -o "${FNAME_BIN_MASK_SCT}" || exit
+    end_time=$(gdate +%s%3N)
+    elapsed_time_ms=$((end_time - start_time))
+    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
+    echo -e "\nBinary mask (bin) created in $elapsed_time_sec seconds."
+
+    echo -e "\nCreating binary mask from segmentation for fieldmap..."
     sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $((DIAMETER + 2 * BLUR_WIDTH + 15)) -f cylinder -o "${FNAME_BIN_MASK_SCT_FM}" || exit
+    
     echo -e "\nCreating gaussian soft mask from segmentation..."
     sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $DIAMETER -f gaussian -o "${FNAME_SOFT_MASK_GAUSS_SCT}" || exit
+    
     echo -e "\nAdding the two previous masks..."
+    start_time=$(gdate +%s%3N)
     st_mask gaussian-sct-softmask -ib "${FNAME_BIN_MASK_SCT}" -ig "${FNAME_SOFT_MASK_GAUSS_SCT}" -o "${FNAME_SOFT_MASK_SUM_ST}" || exit
+    end_time=$(gdate +%s%3N)
+    elapsed_time_ms=$((end_time - start_time))
+    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
+    echo -e "\nSum Soft mask (sum) created in $elapsed_time_sec seconds."
+    
     echo -e "\nCreating constant soft mask from the binary mask..."
+    start_time=$(gdate +%s%3N)
     st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_CST_ST}" -b 'constant' -bw $BLUR_WIDTH || exit
+    end_time=$(gdate +%s%3N)
+    elapsed_time_ms=$((end_time - start_time))
+    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
+    echo -e "\nConstant soft mask (cst) created in $elapsed_time_sec seconds."
+    
     echo -e "\nCreating linear soft mask from the binary mask..."
+    start_time=$(gdate +%s%3N)
     st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_LIN_ST}" -b 'linear' -bw $BLUR_WIDTH || exit
+    end_time=$(gdate +%s%3N)
+    elapsed_time_ms=$((end_time - start_time))
+    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
+    echo -e "\nLinear soft mask (lin) created in $elapsed_time_sec seconds."
+    
     echo -e "\nCreating gaussian soft mask from the binary mask..."
+    start_time=$(gdate +%s%3N)
     st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_GSS_ST}" -b 'gaussian' -bw $BLUR_WIDTH || exit
+    end_time=$(gdate +%s%3N)
+    elapsed_time_ms=$((end_time - start_time))
+    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
+    echo -e "\nGaussian soft mask (gss) created in $elapsed_time_sec seconds."
+
+    echo -e "\nAll masks created successfully."
 
     # Show masks with magnitude
     echo -e "\nDisplaying masks with magnitude image..."
@@ -210,7 +252,7 @@ fi
 
 # Run the shim for the segmentation
 OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_segmentation"
-echo -e "\nShimming the fieldmap with the segmentation..."
+echo -e "\nShimming the fieldmap with mask sct_seg_mask..."
 st_b0shim dynamic \
     --coil $COIL_PATH $COIL_CONFIG_PATH \
     --fmap $FIELDMAP_PATH \
