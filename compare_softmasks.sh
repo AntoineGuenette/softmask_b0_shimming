@@ -259,7 +259,7 @@ st_b0shim dynamic \
     --anat $EPI_PATH \
     --mask $FNAME_SEGMENTATION \
     --mask-dilation-kernel-size 5 \
-    --optimizer-criteria 'mse_softmasks' \
+    --optimizer-criteria 'mse_soft' \
     --optimizer-method "least_squares" \
     --slices "auto" \
     --output-file-format-coil "chronological-coil" \
@@ -295,7 +295,7 @@ do
         --anat $EPI_PATH \
         --mask "$mask" \
         --mask-dilation-kernel-size 5 \
-        --optimizer-criteria 'mse_softmasks' \
+        --optimizer-criteria 'mse_soft' \
         --optimizer-method "least_squares" \
         --slices "auto" \
         --output-file-format-coil "chronological-coil" \
