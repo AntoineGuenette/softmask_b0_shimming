@@ -205,8 +205,9 @@ do
         --fmap $FIELDMAP_PATH \
         --anat $MAGNITUDE_PATH \
         --mask "$mask" \
-        --mask-dilation-kernel-size 5 \
-        --optimizer-method "pseudo_inverse" \
+        --mask-dilation-kernel-size 3 \
+        --optimizer-criteria 'rmse' \
+        --optimizer-method "least_squares" \
         --slices "auto" \
         --output-file-format-coil "chronological-coil" \
         --output-value-format "absolute" \
