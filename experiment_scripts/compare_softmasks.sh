@@ -52,7 +52,7 @@ VERIFICATION=$5
 # Set file paths
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
-COIL_PROFILES_DIR="$SCRIPT_DIR/../coil_profiles"
+COIL_PROFILES_DIR="$SCRIPT_DIR/../../coil_profiles"
 COIL_PATH="${COIL_PROFILES_DIR}/coil_profiles_NP15.nii.gz"
 COIL_CONFIG_PATH="${COIL_PROFILES_DIR}/NP15_config.json"
 COIL_NAME="$(grep '"name"' "$COIL_CONFIG_PATH" | sed -E 's/.*"name": *"([^"]+)".*/\1/')"

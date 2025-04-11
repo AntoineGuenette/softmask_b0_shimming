@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # This script computes the tSNR of a 60-volume EPI image
-
-# In takes two arguments:
-# 1. The path to the 60 volumes EPI images
+#
+# Takes two parameters:
+# 1. The path to the 60 volumes EPI image
 # 2. The name of the output files
-
+#
 # Outputs:
 # - Mean image of the EPI
 # - Mask of the spinal cord
@@ -14,11 +14,11 @@
 # - Detrended EPI
 # - Standard deviation of the EPI
 # - tSNR map
+#
 
 # Inputs
 EPI_60vol_PATH=$1
 OPT_NAME=$2
-OPT_NAME=$(basename $OPT_NAME)
 
 EPI_FOLDER_PATH=$(dirname $EPI_60vol_PATH)
 OPT_FOLDER_PATH=$(dirname $EPI_FOLDER_PATH)

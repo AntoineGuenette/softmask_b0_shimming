@@ -58,8 +58,8 @@ SCRIPT_DIR=$(dirname "$(realpath "$0")")
 OUTPUT_PATH="${DICOMS_PATH%/*}/tsnr-$SUBJECT_NAME/"
 
 # Dicoms to nifti
-# echo -e "\nConverting dicoms to nifti..."
-# st_dicom_to_nifti -i $DICOMS_PATH --subject $SUBJECT_NAME -o $OUTPUT_PATH
+echo -e "\nConverting dicoms to nifti..."
+st_dicom_to_nifti -i $DICOMS_PATH --subject $SUBJECT_NAME -o $OUTPUT_PATH
 
 # Set ohter file paths
 SHIMMED_EPI_BIN_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}" -name "*01_bold.nii.gz")
@@ -76,24 +76,24 @@ OUTPUT_PATH_GAUSS=${OUTPUT_PATH}sub-acdc261/gauss/
 OUTPUT_PATH_GAUSS_SUM=${OUTPUT_PATH}sub-acdc261/gauss_sum/
 OUTPUT_PATH_SCSEG=${OUTPUT_PATH}sub-acdc261/scseg/
 
-# echo "Output paths:"
-# echo "SHIMMED_EPI_BIN_PATH: $SHIMMED_EPI_BIN_PATH"
-# echo "SHIMMED_EPI_2VALS_PATH: $SHIMMED_EPI_2VALS_PATH"
-# echo "SHIMMED_EPI_LINEAR_PATH: $SHIMMED_EPI_LINEAR_PATH"
-# echo "SHIMMED_EPI_GAUSS_PATH: $SHIMMED_EPI_GAUSS_PATH"
-# echo "SHIMMED_EPI_GAUSS_SUM_PATH: $SHIMMED_EPI_GAUSS_SUM_PATH"
-# echo "SHIMMED_EPI_SCSEG_PATH: $SHIMMED_EPI_SCSEG_PATH"
-# echo "OUTPUT_PATH_BIN: $OUTPUT_PATH_BIN"
-# echo "OUTPUT_PATH_2VALS: $OUTPUT_PATH_2VALS"
-# echo "OUTPUT_PATH_LINEAR: $OUTPUT_PATH_LINEAR"
-# echo "OUTPUT_PATH_GAUSS: $OUTPUT_PATH_GAUSS"
-# echo "OUTPUT_PATH_GAUSS_SUM: $OUTPUT_PATH_GAUSS_SUM"
-# echo "OUTPUT_PATH_SCSEG: $OUTPUT_PATH_SCSEG"
+echo "Output paths:"
+echo "SHIMMED_EPI_BIN_PATH: $SHIMMED_EPI_BIN_PATH"
+echo "SHIMMED_EPI_2VALS_PATH: $SHIMMED_EPI_2VALS_PATH"
+echo "SHIMMED_EPI_LINEAR_PATH: $SHIMMED_EPI_LINEAR_PATH"
+echo "SHIMMED_EPI_GAUSS_PATH: $SHIMMED_EPI_GAUSS_PATH"
+echo "SHIMMED_EPI_GAUSS_SUM_PATH: $SHIMMED_EPI_GAUSS_SUM_PATH"
+echo "SHIMMED_EPI_SCSEG_PATH: $SHIMMED_EPI_SCSEG_PATH"
+echo "OUTPUT_PATH_BIN: $OUTPUT_PATH_BIN"
+echo "OUTPUT_PATH_2VALS: $OUTPUT_PATH_2VALS"
+echo "OUTPUT_PATH_LINEAR: $OUTPUT_PATH_LINEAR"
+echo "OUTPUT_PATH_GAUSS: $OUTPUT_PATH_GAUSS"
+echo "OUTPUT_PATH_GAUSS_SUM: $OUTPUT_PATH_GAUSS_SUM"
+echo "OUTPUT_PATH_SCSEG: $OUTPUT_PATH_SCSEG"
 
 # Calculate tSNR for each EPI
-echo -e "\nCalculating tSNR for each EPI..."
-echo -e "\nCalculating tSNR for 01_bold..."
-"$SCRIPT_DIR/calculate_tSNR.sh" $SHIMMED_EPI_BIN_PATH $OUTPUT_PATH_BIN
+# echo -e "\nCalculating tSNR for each EPI..."
+# echo -e "\nCalculating tSNR for 01_bold..."
+# "$SCRIPT_DIR/calculate_tSNR.sh" $SHIMMED_EPI_BIN_PATH $OUTPUT_PATH_BIN
 # echo -e "\nCalculating tSNR for 02_bold..."
 # "$SCRIPT_DIR/calculate_tSNR.sh" $SHIMMED_EPI_2VALS_PATH $OUTPUT_PATH_2VALS
 # echo -e "\nCalculating tSNR for 03_bold..."
