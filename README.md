@@ -2,7 +2,7 @@
 
 1) Accéder au répertoire localement
 ```
-cd Documents/projet_III/scripts_projet_III
+cd Documents/projet_III/softmask_b0_shimming
 ```
 
 2) Activer l'environnement
