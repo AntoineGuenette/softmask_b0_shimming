@@ -17,9 +17,10 @@ def plot_softmasks(path_output="."):
     Plot softmasks for a poster with French labels and color theme.
     """
 
-    # Create a binary mask (sphere)
-    shape = (64, 64, 64)
+    shape = (64,64,64)
     center = np.array(shape) // 2
+
+    # Create a binary mask (sphere)
     radius = 14
 
     x = np.arange(shape[0])[:, None, None]
@@ -58,15 +59,15 @@ def plot_softmasks(path_output="."):
     os.remove(tmp_gss.name)
 
     # Prepare colormap and styling
-    gold_cmap = LinearSegmentedColormap.from_list("black-to-gold", ['#0D1B2A', '#D4AF37'], N=256)
-    fig, axes = plt.subplots(1, 5, figsize=(20, 5), facecolor='#E3E3E3')
+    gold_cmap = LinearSegmentedColormap.from_list("black-to-bronze", ['#0D1B2A', '#B08D57'], N=256)
+    fig, axes = plt.subplots(1, 5, figsize=(24, 5), facecolor='#E3E3E3')
 
     titles = [
-        '0) Masque binaire',
-        '1) Masque continu \nconstant',
-        '2) Masque continu \nlinéaire',
-        '3) Masque continu par \nfiltrage gaussien',
-        "4) Masque continu par \naddition d'une gaussienne",
+        '0) Masque binaire\ncylindrique',
+        '1) Masque discret\nà deux niveaux',
+        '2) Masque continu\nlinéaire',
+        '3) Masque continu\ngaussien',
+        '4) Masque hybride\nbinaire-gaussien',
     ]
     images = [
         (binmask_array, gold_cmap),
@@ -78,7 +79,7 @@ def plot_softmasks(path_output="."):
 
     for ax, (img, cmap), title in zip(axes.flat, images, titles):
         ax.imshow(img[:, :, 32], cmap=cmap, vmin=0, vmax=1)
-        ax.set_title(title, fontsize=20, color='#0D1B2A')
+        ax.set_title(title, fontsize=24, fontweight='bold', color='#0D1B2A')
         ax.axis('off')
 
     plt.tight_layout()

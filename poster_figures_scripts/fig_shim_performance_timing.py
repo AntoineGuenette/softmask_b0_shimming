@@ -9,89 +9,115 @@ def plot_shimming_performance_and_timing(data_dict, save_path=None):
 
     # --- Color palette ---
     colors = {
-        'masque\nbinaire': '#234E70',  # navy blue
-        'constant': '#D4AF37',         # gold
-        'linéaire': '#D4AF37',         # gold
-        'gaussien': '#D4AF37',         # gold
-        'somme': '#D4AF37',            # gold
-        'masques\ncontinus': '#8B1E3F', # bordeaux
+        'segmentation_binaire':            '#8B1E3F',  # bordeaux
+        'masque_binaire_cylindrique':      '#234E70',  # navy blue
+        'masque_discret_a_deux_niveaux':   '#A9BCD0',  # bleu gris
+        'masque_continu_lineaire':         '#A9BCD0',
+        'masque_continu_gaussien':         '#A9BCD0',
+        'masque_hybride_binaire_gaussien': '#A9BCD0',
+        'masques\ncontinus':                 '#B08D57',  # bronze foncé
     }
-
+     
     bg_color = '#E3E3E3'
     text_color = '#0D1B2A'
 
     # Compute and insert averaged "Masques continus"
-    softmask_keys = ['constant', 'linéaire', 'gaussien', 'somme']
+    softmask_keys = ['masque_discret_a_deux_niveaux', 'masque_continu_lineaire', 'masque_continu_gaussien', 'masque_hybride_binaire_gaussien']
     if all(k in data_dict for k in softmask_keys):
         mean_metrics = {metric: np.mean([data_dict[k][metric] for k in softmask_keys]) for metric in ['mean', 'std', 'rmse', 'time']}
         data_dict['masques\ncontinus'] = mean_metrics
 
     methods = list(data_dict.keys())
-    time_methods = ['constant', 'linéaire', 'gaussien', 'somme']
     metrics = ['mean', 'std', 'rmse']
 
     # Extract precomputed percentage improvements and times
     improvements_pct = np.array([[data_dict[m][metric] for metric in metrics] for m in methods])
-    times = [data_dict[m]['time'] for m in methods]
 
     x = np.arange(len(metrics))
     width = 0.12
 
-    fig = plt.figure(figsize=(20, 9), facecolor=bg_color)
-    gs = fig.add_gridspec(1, 2, width_ratios=[2.5, 1])
-    ax1 = fig.add_subplot(gs[0])
-    ax2 = fig.add_subplot(gs[1])
-    fig.subplots_adjust(wspace=0.2)
+    fig = plt.figure(figsize=(24, 12), facecolor=bg_color)
+    gs = fig.add_gridspec(1, 3, width_ratios=[0.6, 2.5, 0.9])
+    ax_legend = fig.add_subplot(gs[0])
+    ax1 = fig.add_subplot(gs[1])
+    ax2 = fig.add_subplot(gs[2])
+    fig.subplots_adjust(wspace=0.20)
+
+    # --- Legend subplot ---
+    legend_labels = {
+        'segmentation_binaire': 'Segmentation\nbinaire',
+        'masque_binaire_cylindrique': 'Masque binaire\ncylindrique',
+        'masque_discret_a_deux_niveaux': 'Masque discret\nà deux niveaux',
+        'masque_continu_lineaire': 'Masque continu\nlinéaire',
+        'masque_continu_gaussien': 'Masque continu\ngaussien',
+        'masque_hybride_binaire_gaussien': 'Masque hybride\nbinaire-gaussien',
+        'masques\ncontinus': 'Masques continus'
+    }
+
+    ax_legend.axis('off')
+    legend_handles = [
+        plt.Line2D([0], [0], marker='s', linestyle='None',
+                   color=colors.get(key, '#CCCCCC'), label=legend_labels[key], markersize=12)
+        for key in legend_labels
+    ]
+    ax_legend.legend(handles=legend_handles, loc='center left', fontsize=18, frameon=False)
 
     # --- Left: Improvement percentages ---
     for i, method in enumerate(methods):
         offset = (i - len(methods)/2) * width + width/2
-        method_color = colors.get(method.lower(), '#CCC')
+        method_color = colors.get(method.lower(), '#CCCCCC')
         bars = ax1.bar(x + offset, improvements_pct[i], width,
                        label=method.capitalize(),
                        color=method_color)
 
         for j, bar in enumerate(bars):
+            is_bold = method in ['segmentation_binaire', 'masque_binaire_cylindrique', 'masques\ncontinus']
             ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
-                     f"{improvements_pct[i, j]:.1f}%", ha='center', va='bottom',
-                     fontsize=11, rotation=90, color='#555')
+                     f"{improvements_pct[i, j]:.1f}%",
+                     ha='center', va='bottom',
+                     fontsize=18,
+                     fontweight='bold' if is_bold else 'normal',
+                     rotation='vertical',
+                     color='#0D1B2A')
 
-    ax1.set_title("Amélioration de l'homogénétié \ndu champ magnétique", fontsize=20, color=text_color, pad=10)
-    ax1.set_ylabel("Amélioration (%)", fontsize=16, color=text_color)
+    ax1.set_title("Amélioration de l'homogénétié\ndu champ magnétique", fontsize=28, fontweight='bold', color=text_color, pad=10)
     ax1.set_xticks(x)
-    ax1.set_xticklabels(['Moyenne', 'Écart-type', 'RMSE'], fontsize=16, color=text_color)
-    ax1.legend(frameon=False, fontsize=12)
+    ax1.set_xticklabels(['Moyenne', 'Écart-type', 'RMSE'], fontsize=24, color=text_color)
     ax1.set_facecolor(bg_color)
     ax1.spines[['top', 'right']].set_visible(False)
     ax1.grid(axis='y', linestyle='--', linewidth=0.5, color='#DDD')
 
-    # Apply broken y-axis from 30% to 100%
-    ax1.set_ylim(30, 100)
+    # Apply broken y-axis from 70% to 100%
+    ax1.set_ylim(70, 100)
     ax1.spines['bottom'].set_visible(False)
     ax1.tick_params(bottom=False)
 
     # --- Right: Timing in seconds ---
-    timing_methods = [m for m in methods if m not in ['segmentation', 'masque\nbinaire']]
+    timing_methods = [m for m in methods if m not in ['segmentation_binaire', 'masque_binaire_cylindrique']]
     x2 = np.arange(len(timing_methods))
     bars2 = ax2.bar(x2,
                      [data_dict[m]['time'] for m in timing_methods],
                      width=5*width,
-                     color=[colors.get(m.lower(), '#CCC') for m in timing_methods])
+                     color=[colors.get(m.lower(), '#CCCCCC') for m in timing_methods])
 
     for i, bar in enumerate(bars2):
-        ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-                 f"{[data_dict[m]['time'] for m in timing_methods][i]:.2f}s", ha='center', va='bottom', fontsize=11, rotation=90, color='#555')
+        method_name = timing_methods[i]
+        fontweight = 'bold' if method_name == 'masques\ncontinus' else 'normal'
+        ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.05,
+                 f"{[data_dict[m]['time'] for m in timing_methods][i]:.2f}s",
+                    ha='center', va='bottom',
+                    fontsize=18,
+                    fontweight=fontweight,
+                    rotation='horizontal',
+                    color='#0D1B2A')
 
-    ax2.set_title("Temps de conversion \ndes masques", fontsize=20, color=text_color, pad=10)
-    ax2.set_ylabel("Temps (s)", fontsize=16, color=text_color)
-    ax2.set_xticks(x2)
-    ax2.set_xticklabels([m.capitalize() for m in timing_methods], fontsize=16, rotation=90, color=text_color)
+    ax2.set_title("Temps de conversion \ndes masques", fontsize=28, fontweight='bold', color=text_color, pad=10)
+    ax2.set_xticks([])
+    ax2.set_xticklabels([])
     ax2.set_facecolor(bg_color)
     ax2.spines[['top', 'right']].set_visible(False)
     ax2.grid(axis='y', linestyle='--', linewidth=0.5, color='#DDD')
-
-    # fig.suptitle("Comparaison des performances de shimming et du coût de conversion", fontsize=16, color=text_color, y=1.02)
-
+    
     # Export
     if save_path:
         fig.savefig(f"{save_path}.svg", format='svg', bbox_inches='tight', facecolor=bg_color)
@@ -102,14 +128,14 @@ def plot_shimming_performance_and_timing(data_dict, save_path=None):
 
 if __name__ == "__main__":
     data = {
-    'segmentation': {'mean': 99.98, 'std': 89.54, 'rmse': 89.73, 'time': 40.656},
-    'masque\nbinaire': {'mean': 96.41, 'std': 80.65, 'rmse': 80.89, 'time': 3.138},
-    'constant': {'mean': 88.67, 'std': 82.64, 'rmse': 82.73, 'time': 8.664},
-    'linéaire': {'mean': 85.57, 'std': 81.61, 'rmse': 81.71, 'time': 2.764},
-    'gaussien': {'mean': 36.25, 'std': 76.33, 'rmse': 75.48, 'time': 8.835},
-    'somme': {'mean': 52.90, 'std': 81.12, 'rmse': 80.41, 'time': 4.677},
+    'segmentation_binaire': {'mean': 98.68, 'std': 95.62, 'rmse': 95.79, 'time': 149.030},
+    'masque_binaire_cylindrique': {'mean': 98.09, 'std': 87.65, 'rmse': 88.20, 'time': 3.166},
+    'masque_discret_a_deux_niveaux': {'mean': 98.54, 'std': 86.56, 'rmse': 87.04, 'time': 8.234},
+    'masque_continu_lineaire': {'mean': 98.95, 'std': 86.64, 'rmse': 87.14, 'time': 2.841},
+    'masque_continu_gaussien': {'mean': 90.62, 'std': 84.02, 'rmse': 84.47, 'time': 8.995},
+    'masque_hybride_binaire_gaussien': {'mean': 94.70, 'std': 88.25, 'rmse': 88.64, 'time': 4.588},
     }
 
-
     output_path = "/Users/antoineguenette/Desktop/figures_affiche/figure_shimming_performance_timing"
+    
     plot_shimming_performance_and_timing(data, save_path=output_path)
