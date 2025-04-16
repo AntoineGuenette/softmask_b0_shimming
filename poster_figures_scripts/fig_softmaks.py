@@ -17,6 +17,14 @@ def plot_softmasks(path_output="."):
     Plot softmasks for a poster with French labels and color theme.
     """
 
+    colors = {
+        'masque_binaire_cylindrique':      '#8B1E3F',  # accent bordeaux
+        'masque_discret_a_deux_niveaux':   '#B08D57',  # bronze 1
+        'masque_continu_lineaire':         '#A37A44',  # bronze 2
+        'masque_continu_gaussien':         '#926C3B',  # bronze 3
+        'masque_hybride_binaire_gaussien': '#7F5E32',  # bronze 4
+    }
+
     shape = (64,64,64)
     center = np.array(shape) // 2
 
@@ -59,7 +67,7 @@ def plot_softmasks(path_output="."):
     os.remove(tmp_gss.name)
 
     # Prepare colormap and styling
-    gold_cmap = LinearSegmentedColormap.from_list("black-to-bronze", ['#0D1B2A', '#B08D57'], N=256)
+    gray_cmap = LinearSegmentedColormap.from_list("black-to-blue", ['#0D1B2A', '#E3E3E3'], N=256)
     fig, axes = plt.subplots(1, 5, figsize=(24, 5), facecolor='#E3E3E3')
 
     titles = [
@@ -70,16 +78,16 @@ def plot_softmasks(path_output="."):
         '4) Masque hybride\nbinaire-gaussien',
     ]
     images = [
-        (binmask_array, gold_cmap),
-        (cst_softmask, gold_cmap),
-        (lin_softmask, gold_cmap),
-        (gss_softmask, gold_cmap),
-        (sum_softmask, gold_cmap),
+        (binmask_array, gray_cmap),
+        (cst_softmask, gray_cmap),
+        (lin_softmask, gray_cmap),
+        (gss_softmask, gray_cmap),
+        (sum_softmask, gray_cmap),
     ]
 
-    for ax, (img, cmap), title in zip(axes.flat, images, titles):
+    for ax, (img, cmap), title, color_key in zip(axes.flat, images, titles, colors.values()):
         ax.imshow(img[:, :, 32], cmap=cmap, vmin=0, vmax=1)
-        ax.set_title(title, fontsize=24, fontweight='bold', color='#0D1B2A')
+        ax.set_title(title, fontsize=24, fontweight='bold', color=color_key)
         ax.axis('off')
 
     plt.tight_layout()

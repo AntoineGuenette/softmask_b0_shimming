@@ -9,13 +9,13 @@ def plot_shimming_performance_and_timing(data_dict, save_path=None):
 
     # --- Color palette ---
     colors = {
-        'segmentation_binaire':            '#8B1E3F',  # bordeaux
-        'masque_binaire_cylindrique':      '#234E70',  # navy blue
-        'masque_discret_a_deux_niveaux':   '#A9BCD0',  # bleu gris
-        'masque_continu_lineaire':         '#A9BCD0',
-        'masque_continu_gaussien':         '#A9BCD0',
-        'masque_hybride_binaire_gaussien': '#A9BCD0',
-        'masques\ncontinus':                 '#B08D57',  # bronze foncé
+        'segmentation_binaire':            '#999999',  # neutral gray
+        'masque_binaire_cylindrique':      '#8B1E3F',  # accent bordeaux
+        'masque_discret_a_deux_niveaux':   '#B08D57',  # bronze 1
+        'masque_continu_lineaire':         '#A37A44',  # bronze 2
+        'masque_continu_gaussien':         '#926C3B',  # bronze 3
+        'masque_hybride_binaire_gaussien': '#7F5E32',  # bronze 4
+        'masques\ncontinus':               '#234E70',  # royal blue
     }
      
     bg_color = '#E3E3E3'
@@ -28,7 +28,7 @@ def plot_shimming_performance_and_timing(data_dict, save_path=None):
         data_dict['masques\ncontinus'] = mean_metrics
 
     methods = list(data_dict.keys())
-    metrics = ['mean', 'std', 'rmse']
+    metrics = ['std', 'rmse']
 
     # Extract precomputed percentage improvements and times
     improvements_pct = np.array([[data_dict[m][metric] for metric in metrics] for m in methods])
@@ -37,7 +37,7 @@ def plot_shimming_performance_and_timing(data_dict, save_path=None):
     width = 0.12
 
     fig = plt.figure(figsize=(24, 12), facecolor=bg_color)
-    gs = fig.add_gridspec(1, 3, width_ratios=[0.6, 2.5, 0.9])
+    gs = fig.add_gridspec(1, 3, width_ratios=[0.9, 2, 1.1])
     ax_legend = fig.add_subplot(gs[0])
     ax1 = fig.add_subplot(gs[1])
     ax2 = fig.add_subplot(gs[2])
@@ -51,7 +51,7 @@ def plot_shimming_performance_and_timing(data_dict, save_path=None):
         'masque_continu_lineaire': 'Masque continu\nlinéaire',
         'masque_continu_gaussien': 'Masque continu\ngaussien',
         'masque_hybride_binaire_gaussien': 'Masque hybride\nbinaire-gaussien',
-        'masques\ncontinus': 'Masques continus'
+        'masques\ncontinus': 'Moyenne des\nmasques continus'
     }
 
     ax_legend.axis('off')
@@ -60,7 +60,7 @@ def plot_shimming_performance_and_timing(data_dict, save_path=None):
                    color=colors.get(key, '#CCCCCC'), label=legend_labels[key], markersize=12)
         for key in legend_labels
     ]
-    ax_legend.legend(handles=legend_handles, loc='center left', fontsize=18, frameon=False)
+    ax_legend.legend(handles=legend_handles, loc='center left', fontsize=22, frameon=False)
 
     # --- Left: Improvement percentages ---
     for i, method in enumerate(methods):
@@ -73,22 +73,22 @@ def plot_shimming_performance_and_timing(data_dict, save_path=None):
         for j, bar in enumerate(bars):
             is_bold = method in ['segmentation_binaire', 'masque_binaire_cylindrique', 'masques\ncontinus']
             ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
-                     f"{improvements_pct[i, j]:.1f}%",
+                     f"{improvements_pct[i, j]:.1f}",
                      ha='center', va='bottom',
-                     fontsize=18,
+                     fontsize=22,
                      fontweight='bold' if is_bold else 'normal',
                      rotation='vertical',
                      color='#0D1B2A')
 
-    ax1.set_title("Amélioration de l'homogénétié\ndu champ magnétique", fontsize=28, fontweight='bold', color=text_color, pad=10)
+    ax1.set_title("Réduction de l'écart-type et de la RMSE du champ \nmagnétique B₀ après simulation de shimming [%]", fontsize=26, fontweight='bold', color=text_color, pad=10)
     ax1.set_xticks(x)
-    ax1.set_xticklabels(['Moyenne', 'Écart-type', 'RMSE'], fontsize=24, color=text_color)
+    ax1.set_xticklabels(['Écart-type', 'RMSE'], fontsize=24, color=text_color)
     ax1.set_facecolor(bg_color)
     ax1.spines[['top', 'right']].set_visible(False)
     ax1.grid(axis='y', linestyle='--', linewidth=0.5, color='#DDD')
 
-    # Apply broken y-axis from 70% to 100%
-    ax1.set_ylim(70, 100)
+    # Apply broken y-axis from 80% to 100%
+    ax1.set_ylim(80, 100)
     ax1.spines['bottom'].set_visible(False)
     ax1.tick_params(bottom=False)
 
@@ -104,14 +104,14 @@ def plot_shimming_performance_and_timing(data_dict, save_path=None):
         method_name = timing_methods[i]
         fontweight = 'bold' if method_name == 'masques\ncontinus' else 'normal'
         ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.05,
-                 f"{[data_dict[m]['time'] for m in timing_methods][i]:.2f}s",
+                 f"{[data_dict[m]['time'] for m in timing_methods][i]:.2f}",
                     ha='center', va='bottom',
-                    fontsize=18,
+                    fontsize=22,
                     fontweight=fontweight,
                     rotation='horizontal',
                     color='#0D1B2A')
 
-    ax2.set_title("Temps de conversion \ndes masques", fontsize=28, fontweight='bold', color=text_color, pad=10)
+    ax2.set_title("Temps de conversion \ndes masques [s]", fontsize=26, fontweight='bold', color=text_color, pad=10)
     ax2.set_xticks([])
     ax2.set_xticklabels([])
     ax2.set_facecolor(bg_color)
@@ -122,9 +122,6 @@ def plot_shimming_performance_and_timing(data_dict, save_path=None):
     if save_path:
         fig.savefig(f"{save_path}.svg", format='svg', bbox_inches='tight', facecolor=bg_color)
         fig.savefig(f"{save_path}.png", dpi=300, bbox_inches='tight', facecolor=bg_color)
-
-    plt.show()
-
 
 if __name__ == "__main__":
     data = {
