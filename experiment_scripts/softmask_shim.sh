@@ -283,13 +283,13 @@ case $fieldmap_approval in
 esac
 
 # Create output directory for the optimizations
-OPTI_OUTPUT_DIR="${OUTPUT_PATH}derivatives/optimizations"
+OPTI_OUTPUT_DIR="${OUTPUT_PATH}/../../Optimisations"
 if [ ! -d $OUTPUT_DIR ]; then
     mkdir $OUTPUT_DIR
 fi
 
 # Run the shim
-OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_${SOFTMASK_TYPE}"
+OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_${SUBJECT_NAME}_${SOFTMASK_TYPE}"
 echo -e "\nShimming the fieldmap..."
 st_b0shim dynamic \
     --coil $COIL_PATH $COIL_CONFIG_PATH \
