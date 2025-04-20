@@ -22,7 +22,7 @@ dicoms
 |    ├── dicom2
 |    └── ...
 
-It takes four arguments:
+It takes five arguments:
 1. The path to the dicoms directory
 2. The name / tag of the subject
 3. The diameter of the binary mask
@@ -313,9 +313,9 @@ do
 done
 
 # Remove the sorted dicoms folder if necessary
-if [ $VERIFICATION == 1 ]; then
+if [ -d "$SORTED_DICOMS_PATH" ]; then
     echo -e "\nRemoving sorted dicoms folder..."
-    rm -r $SORTED_DICOMS_PATH
+    rm -r "$SORTED_DICOMS_PATH"
 fi
 
 # End of the script
