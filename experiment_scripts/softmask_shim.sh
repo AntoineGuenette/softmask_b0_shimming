@@ -108,12 +108,16 @@ FNAME_SOFT_MASK_GAUSS_SCT="${MASK_DIR}/sct_soft_mask_gauss.nii.gz"
 # File name of the ST soft mask
 if [[ "$SOFTMASK_TYPE" == "2levels" ]]; then
     FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_2lvl.nii.gz"
+    FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT="${MASK_DIR}/sct_bin_mask_soft_equivalent_2lvl.nii.gz"
 elif [[ "$SOFTMASK_TYPE" == "linear" ]]; then
     FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_linr.nii.gz"
+    FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT="${MASK_DIR}/sct_bin_mask_soft_equivalent_linr.nii.gz"
 elif [[ "$SOFTMASK_TYPE" == "gaussian" ]]; then
     FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_gaus.nii.gz"
+    FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT="${MASK_DIR}/sct_bin_mask_soft_equivalent_gaus.nii.gz"
 elif [[ "$SOFTMASK_TYPE" == "hybrid" ]]; then
     FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_hybr.nii.gz"
+    FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT="${MASK_DIR}/sct_bin_mask_soft_equivalent_hybr.nii.gz"
 else
     echo "Invalid softmask type. Choose from: 2levels, linear, gaussian, hybrid."
     exit 1
@@ -150,7 +154,7 @@ else
 
 fi
 
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_ST" ] ; then
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_ST" ] && [ -f "$FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT" ] ; then
     
     echo -e "\nSoft mask already exists. Skipping softmask creation..."
 
@@ -202,6 +206,10 @@ else
         
     fi
 
+    echo -e "\nCreating equivalent binary mask from the soft mask..."
+    st_mask threshold -i "${FNAME_SOFT_MASK_ST}" -o "${FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT}" --thr 0.4999 || exit
+    echo -e "Equivalent binary mask (cst) created."
+
     echo -e "\nAll masks created successfully."
 
 fi
@@ -211,6 +219,7 @@ echo -e "\nDisplaying masks with magnitude image..."
 fsleyes \
     $MPRAGE_PATH -cm greyscale \
     $FNAME_SOFT_MASK_ST -cm copper -a 50.0 \
+    $FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT -cm red -a 50.0 \
     $FNAME_SEGMENTATION -cm blue
 
 # Promp user to approve the masks
@@ -288,14 +297,39 @@ if [ ! -d $OUTPUT_DIR ]; then
     mkdir $OUTPUT_DIR
 fi
 
-# Run the shim
+# Run the shim for the softmask
 OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_${SUBJECT_NAME}_${SOFTMASK_TYPE}"
-echo -e "\nShimming the fieldmap..."
+echo -e "\nShimming the fieldmap for the softmask ${SOFTMASK_TYPE}..."
 st_b0shim dynamic \
     --coil $COIL_PATH $COIL_CONFIG_PATH \
     --fmap $FIELDMAP_PATH \
     --anat $EPI_PATH \
     --mask $FNAME_SOFT_MASK_ST \
+    --mask-dilation-kernel-size 3 \
+    --optimizer-criteria 'rmse' \
+    --optimizer-method "least_squares" \
+    --slices "auto" \
+    --output-file-format-coil "chronological-coil" \
+    --output-value-format "absolute" \
+    --segmentation-mask "$FNAME_SEGMENTATION" \
+    --fatsat "yes" \
+    --regularization-factor 0.3 \
+    --output "$OUTPUT_DIR"
+
+# Create two files with the same currents, with and without fatsat
+DYN_CURRENTS_DIR="${OUTPUT_DIR}/coefs_coil0_${COIL_NAME}_no_fatsat.txt"
+DYN_CURRENTS_MODIFIED_DIR="${OUTPUT_DIR}/coefs_coil0_${COIL_NAME}_SAME_CURRENTS_FATSAT.txt"
+fatsat=$(sed -n '1p' "$DYN_CURRENTS_DIR")
+sed 'p' "$DYN_CURRENTS_DIR" > "$DYN_CURRENTS_MODIFIED_DIR"
+
+# Run the shim for the equivalent binary mask
+OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_${SUBJECT_NAME}_${SOFTMASK_TYPE}_binary_equivalent"
+echo -e "\nShimming the fieldmap for the equivalent binary mask of ${SOFTMASK_TYPE}..."
+st_b0shim dynamic \
+    --coil $COIL_PATH $COIL_CONFIG_PATH \
+    --fmap $FIELDMAP_PATH \
+    --anat $EPI_PATH \
+    --mask $FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT \
     --mask-dilation-kernel-size 3 \
     --optimizer-criteria 'rmse' \
     --optimizer-method "least_squares" \
