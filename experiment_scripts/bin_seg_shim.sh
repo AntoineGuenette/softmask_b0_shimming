@@ -210,6 +210,10 @@ st_b0shim dynamic \
     --optimizer-criteria 'rmse' \
     --optimizer-method "least_squares" \
     --slices "auto" \
+    --output-file-format-coil "chronological-coil" \
+    --output-value-format "absolute" \
+    --fatsat "yes" \
+    --regularization-factor 0.3 \
     --output "$OUTPUT_DIR"
 
 # Create two files with the same currents, with and without fatsat
@@ -230,6 +234,11 @@ st_b0shim dynamic \
     --optimizer-criteria 'rmse' \
     --optimizer-method "least_squares" \
     --slices "auto" \
+    --output-file-format-coil "chronological-coil" \
+    --output-value-format "absolute" \
+    --segmentation-mask "$FNAME_SEGMENTATION" \
+    --fatsat "yes" \
+    --regularization-factor 0.3 \
     --output "$OUTPUT_DIR"
 
 # Create two files with the same currents, with and without fatsat
