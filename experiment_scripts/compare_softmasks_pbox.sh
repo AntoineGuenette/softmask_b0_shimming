@@ -95,15 +95,43 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ] && [ -f "$FNAME_BIN_MA
     echo -e "\nMasks already exist. Skipping mask creation..."
 else
     # Create masks
-    echo -e "\nCreating binary masks..."
+    
+    echo -e "\nCreating binary mask..."
+    start_time=$(gdate +%s%3N)
     st_mask sphere -i $MAGNITUDE_PATH -o $FNAME_BIN_MASK_SCT -r $RADIUS --center 62 58 18 || exit
-    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_BIN_MASK_SCT_FM}" -b 'constant' -bw $((BLUR_WIDTH + 15)) -bv 1 || exit
+    end_time=$(gdate +%s%3N)
+    elapsed_time_ms=$((end_time - start_time))
+    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
+    echo -e "\nBinary mask (bin) created in $elapsed_time_sec seconds."
+
+    echo -e "\nCreating binary mask from segmentation for fieldmap..."
+    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_BIN_MASK_SCT_FM}" -b 'constant' -bw $((BLUR_WIDTH + 6)) -bv 1 || exit
+    
     echo -e "\nCreating constant soft mask from the binary mask..."
+    start_time=$(gdate +%s%3N)
     st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_CST_ST}" -b 'constant' -bw $BLUR_WIDTH || exit
+    end_time=$(gdate +%s%3N)
+    elapsed_time_ms=$((end_time - start_time))
+    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
+    echo -e "\nConstant soft mask (cst) created in $elapsed_time_sec seconds."
+    
     echo -e "\nCreating linear soft mask from the binary mask..."
+    start_time=$(gdate +%s%3N)
     st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_LIN_ST}" -b 'linear' -bw $BLUR_WIDTH || exit
+    end_time=$(gdate +%s%3N)
+    elapsed_time_ms=$((end_time - start_time))
+    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
+    echo -e "\nLinear soft mask (lin) created in $elapsed_time_sec seconds."
+    
     echo -e "\nCreating gaussian soft mask from the binary mask..."
+    start_time=$(gdate +%s%3N)
     st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_GSS_ST}" -b 'gaussian' -bw $BLUR_WIDTH || exit
+    end_time=$(gdate +%s%3N)
+    elapsed_time_ms=$((end_time - start_time))
+    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
+    echo -e "\nGaussian soft mask (gss) created in $elapsed_time_sec seconds."
+
+    echo -e "\nAll masks created successfully."
 
     # Show masks with magnitude
     echo -e "\nDisplaying masks with magnitude image..."
