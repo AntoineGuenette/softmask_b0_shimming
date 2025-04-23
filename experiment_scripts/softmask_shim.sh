@@ -219,7 +219,6 @@ echo -e "\nDisplaying masks with magnitude image..."
 fsleyes \
     $MPRAGE_PATH -cm greyscale \
     $FNAME_SOFT_MASK_ST -cm copper -a 50.0 \
-    $FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT -cm red -a 50.0 \
     $FNAME_SEGMENTATION -cm blue
 
 # Promp user to approve the masks
