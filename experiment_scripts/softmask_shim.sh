@@ -64,7 +64,7 @@ COIL_CONFIG_PATH="${COIL_PROFILES_DIR}/NP15_config.json"
 COIL_NAME="$(grep '"name"' "$COIL_CONFIG_PATH" | sed -E 's/.*"name": *"([^"]+)".*/\1/')"
 echo Name of the chosen coil : $COIL_NAME
 
-OUTPUT_PATH="/Users/antoineguenette/Desktop/démonstration_projet_III/Résultats/sub-$SUBJECT_NAME/"
+OUTPUT_PATH="/Users/antoineguenette/Desktop/Scolaire/NeuroPoly/Projet_III/démonstration_projet_III/Résultats/sub-$SUBJECT_NAME/"
 SORTED_DICOMS_PATH="${DICOMS_PATH%/*}/sorted_dicoms_opt/"
 
 # Check if the sorted dicoms and nifti conversion have already been done
@@ -165,7 +165,7 @@ else
 
         echo -e "\nCreating soft mask from the binary mask..."
         start_time=$(gdate +%s%3N)
-        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_ST}" -b 'constant' -bw $BLUR_WIDTH || exit
+        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_ST}" -t '2levels' -bw $BLUR_WIDTH || exit
         end_time=$(gdate +%s%3N)
         elapsed_time_ms=$((end_time - start_time))
         elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -175,7 +175,7 @@ else
 
         echo -e "\nCreating soft mask from the binary mask..."
         start_time=$(gdate +%s%3N)
-        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_ST}" -b 'linear' -bw $BLUR_WIDTH || exit
+        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_ST}" -t 'linear' -bw $BLUR_WIDTH || exit
         end_time=$(gdate +%s%3N)
         elapsed_time_ms=$((end_time - start_time))
         elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -185,7 +185,7 @@ else
 
         echo -e "\nCreating soft mask from the binary mask..."
         start_time=$(gdate +%s%3N)
-        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_ST}" -b 'gaussian' -bw $BLUR_WIDTH || exit
+        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_ST}" -t 'gaussian' -bw $BLUR_WIDTH || exit
         end_time=$(gdate +%s%3N)
         elapsed_time_ms=$((end_time - start_time))
         elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -198,7 +198,7 @@ else
         
         echo -e "\nAdding the two previous masks..."
         start_time=$(gdate +%s%3N)
-        st_mask gaussian-sct-softmask -ib "${FNAME_BIN_MASK_SCT}" -ig "${FNAME_SOFT_MASK_GAUSS_SCT}" -o "${FNAME_SOFT_MASK_ST}" || exit
+        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -is "${FNAME_SOFT_MASK_GAUSS_SCT}" -o "${FNAME_SOFT_MASK_ST}" -t 'sum' || exit
         end_time=$(gdate +%s%3N)
         elapsed_time_ms=$((end_time - start_time))
         elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
