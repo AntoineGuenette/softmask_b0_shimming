@@ -325,7 +325,6 @@ do
         --slices "auto" \
         --output-file-format-coil "chronological-coil" \
         --output-value-format "absolute" \
-        --segmentation-mask "$FNAME_SEGMENTATION" \
         --fatsat "yes" \
         --regularization-factor 0.3 \
         --output "$OUTPUT_DIR"
