@@ -33,11 +33,11 @@
 # - Directory with the nifti files (sub-<subject_name>)
 # It includes all niftis and optimization files (currents for the coil, predicted B0 field, etc.)
 
-# Check if five arguments are provided
+# Check if six arguments are provided
 if [ "$#" -ne 6 ]; then
     echo "Illegal number of parameters"
     echo "Usage: ./compare_softmask.sh <dicoms_path> <subject_name> <diameter> <blur_width> <softmask_type> <verification>"
-    echo "Example: ./compare_softmask.sh /path/to/dicoms subject_name 25 9 2levels 1"
+    echo "Example: ./compare_softmask.sh /path/to/dicoms subject_name 25  2levels 1"
     exit 1
 fi
 
@@ -50,21 +50,19 @@ SOFTMASK_TYPE=$5
 VERIFICATION=$6
 
 # Check if the softmask type is valid
-if [[ "$SOFTMASK_TYPE" != "2levels" && "$SOFTMASK_TYPE" != "linear" && "$SOFTMASK_TYPE" != "gaussian" && "$SOFTMASK_TYPE" != "hybrid" ]]; then
-    echo "Invalid softmask type. Choose from: 2levels, linear, gaussian, hybrid."
+if [[ "$SOFTMASK_TYPE" != "2levels" && "$SOFTMASK_TYPE" != "linear" && "$SOFTMASK_TYPE" != "gaussian" ]]; then
+    echo "Invalid softmask type. Choose from: 2levels, linear, gaussian."
     exit 1
 fi
 
 # Set file paths
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
-
-COIL_PROFILES_DIR="/Users/antoineguenette/Documents/projet_III/coil_profiles"
+COIL_PROFILES_DIR="$SCRIPT_DIR/../../coil_profiles"
 COIL_PATH="${COIL_PROFILES_DIR}/coil_profiles_NP15.nii.gz"
 COIL_CONFIG_PATH="${COIL_PROFILES_DIR}/NP15_config.json"
 COIL_NAME="$(grep '"name"' "$COIL_CONFIG_PATH" | sed -E 's/.*"name": *"([^"]+)".*/\1/')"
 echo Name of the chosen coil : $COIL_NAME
-
-OUTPUT_PATH="/Users/antoineguenette/Desktop/Scolaire/NeuroPoly/Projet_III/démonstration_projet_III/Résultats/sub-$SUBJECT_NAME/"
+OUTPUT_PATH="${DICOMS_PATH%/*}/sub-$SUBJECT_NAME/"
 SORTED_DICOMS_PATH="${DICOMS_PATH%/*}/sorted_dicoms_opt/"
 
 # Check if the sorted dicoms and nifti conversion have already been done
@@ -74,7 +72,6 @@ else
     # Sorting dicoms
     echo -e "\nSorting dicoms..."
     st_sort_dicoms -i $DICOMS_PATH -o $SORTED_DICOMS_PATH -r
-
     # Dicoms to nifti
     echo -e "\nConverting dicoms to nifti..."
     st_dicom_to_nifti -i $SORTED_DICOMS_PATH --subject $SUBJECT_NAME -o $OUTPUT_PATH
@@ -88,7 +85,7 @@ EPI_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}/func" -name "*.nii.gz")
 MPRAGE_PATH="${OUTPUT_PATH}sub-${SUBJECT_NAME}/anat/sub-${SUBJECT_NAME}_T1w.nii.gz"
 
 # Check if the files exist
-if [ -z "$MAGNITUDE_PATH" ] || [ -z "$PHASE1_PATH" ] || [ -z "$PHASE2_PATH" ] || [ -z "$EPI_PATH" ]; then
+if [ -z "$MAGNITUDE_PATH" ] || [ -z "$PHASE1_PATH" ] || [ -z "$PHASE2_PATH" ] || [ -z "$EPI_PATH" ] || [ -z "$MPRAGE_PATH" ]; then
     echo "Error: One or more required NIfTI files are missing! Exiting..."
     exit 1
 fi
@@ -102,116 +99,69 @@ fi
 # File names of the SCT masks
 FNAME_SEGMENTATION="${MASK_DIR}/segmentation.nii.gz"
 FNAME_BIN_MASK_SCT="${MASK_DIR}/sct_bin_mask.nii.gz"
-FNAME_BIN_MASK_FM_SCT="${MASK_DIR}/sct_bin_mask_fm.nii.gz"
-FNAME_SOFT_MASK_GAUSS_SCT="${MASK_DIR}/sct_soft_mask_gauss.nii.gz"
+FNAME_BIN_MASK_SCT_FM="${MASK_DIR}/sct_bin_mask_fm.nii.gz"
 
 # File name of the ST soft mask
 if [[ "$SOFTMASK_TYPE" == "2levels" ]]; then
-    FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_2lvl.nii.gz"
-    FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT="${MASK_DIR}/sct_bin_mask_soft_equivalent_2lvl.nii.gz"
+    FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_2lvls.nii.gz"
 elif [[ "$SOFTMASK_TYPE" == "linear" ]]; then
-    FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_linr.nii.gz"
-    FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT="${MASK_DIR}/sct_bin_mask_soft_equivalent_linr.nii.gz"
+    FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_linear.nii.gz"
 elif [[ "$SOFTMASK_TYPE" == "gaussian" ]]; then
-    FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_gaus.nii.gz"
-    FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT="${MASK_DIR}/sct_bin_mask_soft_equivalent_gaus.nii.gz"
-elif [[ "$SOFTMASK_TYPE" == "hybrid" ]]; then
-    FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_hybr.nii.gz"
-    FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT="${MASK_DIR}/sct_bin_mask_soft_equivalent_hybr.nii.gz"
+    FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask_gauss.nii.gz"
 else
-    echo "Invalid softmask type. Choose from: 2levels, linear, gaussian, hybrid."
+    echo "Invalid softmask type. Choose from: 2levels, linear, gaussian."
     exit 1
 fi
 
 # Check if paths exist and skipping the creation of the masks if they do
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ] && [ -f "$FNAME_BIN_MASK_FM_SCT" ] ; then
-
-    echo -e "\nSegmentation and binary masks already exist. Skipping segmentation and binary mask creation..."
-
-else 
-
-    # Create segmentation
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SEGMENTATION" ]; then
+    echo -e "\nSegmentation mask already exists. Skipping creation..."
+else
     echo -e "\nCreating segmentation from magnitude image..."
     start_time=$(gdate +%s%3N)
     sct_deepseg -i "${MPRAGE_PATH}" -c t1 -task seg_sc_contrast_agnostic -o "${FNAME_SEGMENTATION}" || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "Segmentation mask (seg) created in $elapsed_time_sec seconds."
-    
-    # Create binary mask
-    echo -e "\nCreating binary mask from segmentation..."
-    start_time=$(gdate +%s%3N)
-    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $DIAMETER -f cylinder -o "${FNAME_BIN_MASK_SCT}" || exit
-    end_time=$(gdate +%s%3N)
-    elapsed_time_ms=$((end_time - start_time))
-    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "Binary mask (bin) created in $elapsed_time_sec seconds."
-
-    # Create binary mask for fieldmap
-    echo -e "\nCreating binary mask from segmentation for fieldmap..."
-    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $((DIAMETER + 2 * BLUR_WIDTH + 15)) -f cylinder -o "${FNAME_BIN_MASK_FM_SCT}" || exit
-
+    echo -e "\nSegmentation mask (seg) created in $elapsed_time_sec seconds."
 fi
 
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_ST" ] && [ -f "$FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT" ] ; then
-    
-    echo -e "\nSoft mask already exists. Skipping softmask creation..."
-
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ]; then
+    echo -e "\nBinary mask for fieldmap already exists. Skipping creation..."
 else
-    
+    echo -e "\nCreating binary mask from segmentation for fieldmap..."
+    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $((DIAMETER + 2 * BLUR_WIDTH + 5)) -f cylinder -o "${FNAME_BIN_MASK_SCT_FM}" || exit
+fi
+
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_ST" ]; then
+    echo -e "\nSoft mask already exists. Skipping softmask creation..."
+else
     # Create soft mask 
     if [[ "$SOFTMASK_TYPE" == "2levels" ]]; then
-
         echo -e "\nCreating soft mask from the binary mask..."
         start_time=$(gdate +%s%3N)
-        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_ST}" -t '2levels' -bw $BLUR_WIDTH || exit
+        st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_ST}" -t '2levels' -bw $BLUR_WIDTH || exit
         end_time=$(gdate +%s%3N)
         elapsed_time_ms=$((end_time - start_time))
         elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
         echo -e "Soft mask (cst) created in $elapsed_time_sec seconds."
-
     elif [[ "$SOFTMASK_TYPE" == "linear" ]]; then
-
         echo -e "\nCreating soft mask from the binary mask..."
         start_time=$(gdate +%s%3N)
-        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_ST}" -t 'linear' -bw $BLUR_WIDTH || exit
+        st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_ST}" -t 'linear' -bw $BLUR_WIDTH || exit
         end_time=$(gdate +%s%3N)
         elapsed_time_ms=$((end_time - start_time))
         elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
         echo -e "Soft mask (lin) created in $elapsed_time_sec seconds."
-        
     elif [[ "$SOFTMASK_TYPE" == "gaussian" ]]; then
-
         echo -e "\nCreating soft mask from the binary mask..."
         start_time=$(gdate +%s%3N)
-        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_ST}" -t 'gaussian' -bw $BLUR_WIDTH || exit
+        st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_ST}" -t 'gaussian' -bw $BLUR_WIDTH || exit
         end_time=$(gdate +%s%3N)
         elapsed_time_ms=$((end_time - start_time))
         elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
         echo -e "Soft mask (gss) created in $elapsed_time_sec seconds."
-
-    elif [[ "$SOFTMASK_TYPE" == "hybrid" ]]; then
-
-        echo -e "\nCreating gaussian soft mask from segmentation..."
-        sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $DIAMETER -f gaussian -o "${FNAME_SOFT_MASK_GAUSS_SCT}" || exit
-        
-        echo -e "\nAdding the two previous masks..."
-        start_time=$(gdate +%s%3N)
-        st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -is "${FNAME_SOFT_MASK_GAUSS_SCT}" -o "${FNAME_SOFT_MASK_ST}" -t 'sum' || exit
-        end_time=$(gdate +%s%3N)
-        elapsed_time_ms=$((end_time - start_time))
-        elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-        echo -e "Soft mask (sum) created in $elapsed_time_sec seconds."
-        
     fi
-
-    echo -e "\nCreating equivalent binary mask from the soft mask..."
-    st_mask threshold -i "${FNAME_SOFT_MASK_ST}" -o "${FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT}" --thr 0.4999 || exit
-    echo -e "Equivalent binary mask (cst) created."
-
-    echo -e "\nAll masks created successfully."
-
 fi
 
 # Show masks with magnitude
@@ -219,7 +169,6 @@ echo -e "\nDisplaying masks with magnitude image..."
 fsleyes \
     $MPRAGE_PATH -cm greyscale \
     $FNAME_SOFT_MASK_ST -cm copper -a 50.0 \
-    $FNAME_SEGMENTATION -cm blue
 
 # Promp user to approve the masks
 echo -e "\nDoes the mask look good?"
@@ -247,21 +196,17 @@ FIELDMAP_JSON_PATH="${OUTPUT_PATH}derivatives/fmap/fieldmap.json"
 
 # Check if the fieldmap already exists and skip the creation if it does
 if [ $VERIFICATION == 1 ] && [ -f "$FIELDMAP_PATH" ] && [ -f "$FIELDMAP_JSON_PATH" ]; then
-    
     echo -e "\nFieldmap already exists. Skipping fieldmap creation..."
-
 else
-
     # Create fieldmap
     echo -e "\nCreating fieldmap..."
     st_prepare_fieldmap $PHASE1_PATH $PHASE2_PATH \
      --mag $MAGNITUDE_PATH \
      --unwrapper prelude \
      --gaussian-filter true \
-     --mask $FNAME_BIN_MASK_FM_SCT \
+     --mask $FNAME_BIN_MASK_SCT_FM \
      --sigma 1 \
      -o $FIELDMAP_PATH
-
 fi
 
 # Show fieldmap with magnitude
@@ -304,30 +249,6 @@ st_b0shim dynamic \
     --fmap $FIELDMAP_PATH \
     --anat $EPI_PATH \
     --mask $FNAME_SOFT_MASK_ST \
-    --mask-dilation-kernel-size 3 \
-    --optimizer-criteria 'rmse' \
-    --optimizer-method "least_squares" \
-    --slices "auto" \
-    --output-file-format-coil "chronological-coil" \
-    --output-value-format "absolute" \
-    --fatsat "yes" \
-    --regularization-factor 0.3 \
-    --output "$OUTPUT_DIR"
-
-# Create two files with the same currents, with and without fatsat
-DYN_CURRENTS_DIR="${OUTPUT_DIR}/coefs_coil0_${COIL_NAME}_no_fatsat.txt"
-DYN_CURRENTS_MODIFIED_DIR="${OUTPUT_DIR}/coefs_coil0_${COIL_NAME}_SAME_CURRENTS_FATSAT.txt"
-fatsat=$(sed -n '1p' "$DYN_CURRENTS_DIR")
-sed 'p' "$DYN_CURRENTS_DIR" > "$DYN_CURRENTS_MODIFIED_DIR"
-
-# Run the shim for the equivalent binary mask
-OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_${SUBJECT_NAME}_${SOFTMASK_TYPE}_binary_equivalent"
-echo -e "\nShimming the fieldmap for the equivalent binary mask of ${SOFTMASK_TYPE}..."
-st_b0shim dynamic \
-    --coil $COIL_PATH $COIL_CONFIG_PATH \
-    --fmap $FIELDMAP_PATH \
-    --anat $EPI_PATH \
-    --mask $FNAME_BIN_MASK_SOFT_EQUIVALENT_SCT \
     --mask-dilation-kernel-size 3 \
     --optimizer-criteria 'rmse' \
     --optimizer-method "least_squares" \
