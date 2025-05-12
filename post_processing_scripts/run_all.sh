@@ -96,7 +96,7 @@ do
     OPT_NAME=$(basename $SHIM_PATH)
     if test -d $SHIM_PATH; then
         # Move and rename the EPI file
-        EPI_60vol_PATH=$(find $SHIM_PATH/sub-$SUBJECT_NAME/func -name "sub-acdc261_bold.nii.gz")
+        EPI_60vol_PATH=$(find $SHIM_PATH/sub-$SUBJECT_NAME/func -name "sub-${SUBJECT_NAME}_bold.nii.gz")
         if [ -f "$EPI_60vol_PATH" ]; then
             mkdir -p "$SHIM_PATH/EPIs"
             mv "$EPI_60vol_PATH" "$SHIM_PATH/EPIs/${OPT_NAME}_EPI_60vol.nii.gz"
