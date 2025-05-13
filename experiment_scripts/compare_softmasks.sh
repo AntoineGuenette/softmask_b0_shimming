@@ -35,7 +35,7 @@
 # Check if five arguments are provided
 if [ "$#" -ne 5 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: ./compare_softmask.sh <dicoms_path> <subject_name> <diameter> <blur_width> <verification>"
+    echo "Usage: ./compare_softmask.sh <dicoms_path> <subject_name> <diameter[mm]> <blur_width[mm]> <verification>"
     echo "Example: ./compare_softmask.sh /path/to/dicoms subject_name 25 6 1"
     exit 1
 fi
@@ -114,7 +114,7 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ]; then
 else
     echo -e "\nCreating binary mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $DIAMETER -f cylinder -o "${FNAME_BIN_MASK_SCT}" || exit
+    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size "${DIAMETER}mm" -f cylinder -o "${FNAME_BIN_MASK_SCT}" || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -124,14 +124,15 @@ fi
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ]; then
     echo -e "\nBinary mask for fieldmap already exists. Skipping creation..."
 else
-    echo -e "\nCreating binary mask from segmentation for fieldmap..."
-    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size $((DIAMETER + 2 * BLUR_WIDTH + 5)) -f cylinder -o "${FNAME_BIN_MASK_SCT_FM}" || exit
+    echo -e "\nCreating binary mask for fieldmap from segmentation ..."
+    MASK_SIZE=$((DIAMETER + 2 * BLUR_WIDTH + 5))
+    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size "${MASK_SIZE}mm" -f cylinder -o "${FNAME_BIN_MASK_SCT_FM}" || exit
 fi
 
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_2LVLS_ST" ]; then
     echo -e "\n2 levels soft mask already exists. Skipping creation..."
 else
-    echo -e "\nCreating 2 levels soft mask from the binary mask..."
+    echo -e "\nCreating 2 levels soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
     st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_2LVLS_ST}" -t '2levels' -bw $BLUR_WIDTH || exit
     end_time=$(gdate +%s%3N)
@@ -143,7 +144,7 @@ fi
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_LINEAR_ST" ]; then
     echo -e "\nLinear soft mask already exists. Skipping creation..."
 else
-    echo -e "\nCreating linear soft mask from the binary mask..."
+    echo -e "\nCreating linear soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
     st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_LINEAR_ST}" -t 'linear' -bw $BLUR_WIDTH || exit
     end_time=$(gdate +%s%3N)
@@ -155,7 +156,7 @@ fi
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_GAUSS_ST" ]; then
     echo -e "\nGaussian soft mask already exists. Skipping creation..."
 else
-    echo -e "\nCreating gaussian soft mask from the binary mask..."
+    echo -e "\nCreating gaussian soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
     st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_GAUSS_ST}" -t 'gaussian' -bw $BLUR_WIDTH || exit
     end_time=$(gdate +%s%3N)
