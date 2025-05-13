@@ -166,34 +166,34 @@ fi
 
 echo -e "\nAll masks checked and created successfully."
 
-# # Show masks with magnitude
-# echo -e "\nDisplaying masks with magnitude image..."
-# fsleyes \
-#     $MPRAGE_PATH -cm greyscale \
-#     $FNAME_SOFT_MASK_2LVLS_ST -cm copper -a 50.0 \
-#     $FNAME_SOFT_MASK_LINEAR_ST -cm copper -a 50.0 \
-#     $FNAME_SOFT_MASK_GAUSS_ST -cm copper -a 50.0 \
-#     $FNAME_BIN_MASK_SCT -cm copper -a 50.0 \
+# Show masks with magnitude
+echo -e "\nDisplaying masks with magnitude image..."
+fsleyes \
+    $MPRAGE_PATH -cm greyscale \
+    $FNAME_SOFT_MASK_2LVLS_ST -cm copper -a 50.0 \
+    $FNAME_SOFT_MASK_LINEAR_ST -cm copper -a 50.0 \
+    $FNAME_SOFT_MASK_GAUSS_ST -cm copper -a 50.0 \
+    $FNAME_BIN_MASK_SCT -cm copper -a 50.0 \
 
-# # Promp user to approve the masks
-# echo -e "\nDo the masks look good?"
-# echo "1. Yes"
-# echo "2. No, exit program"
-# read -p "Enter your choice (1 or 2): " mask_approval
+# Promp user to approve the masks
+echo -e "\nDo the masks look good?"
+echo "1. Yes"
+echo "2. No, exit program"
+read -p "Enter your choice (1 or 2): " mask_approval
 
-# case $mask_approval in
-#     1)
-#         echo -e "\nMasks approved."
-#         ;;
-#     2)
-#         echo -e "\nExiting..."
-#         exit 1
-#         ;;
-#     *)
-#         echo -e "\nInvalid choice. Exiting..."
-#         exit 1
-#         ;;
-# esac
+case $mask_approval in
+    1)
+        echo -e "\nMasks approved."
+        ;;
+    2)
+        echo -e "\nExiting..."
+        exit 1
+        ;;
+    *)
+        echo -e "\nInvalid choice. Exiting..."
+        exit 1
+        ;;
+esac
 
 # File names of the fieldmap
 FIELDMAP_PATH="${OUTPUT_PATH}derivatives/fmap/fieldmap.nii.gz"
@@ -214,31 +214,31 @@ else
      -o $FIELDMAP_PATH
 fi
 
-# # Show fieldmap with magnitude
-# echo -e "\nDisplaying fieldmap with magnitude image..."
-# fsleyes \
-#     $MAGNITUDE_PATH -cm greyscale \
-#     $FIELDMAP_PATH -cm brain_colours_diverging_bwr -a 50.0 -dr -100 100
+# Show fieldmap with magnitude
+echo -e "\nDisplaying fieldmap with magnitude image..."
+fsleyes \
+    $MAGNITUDE_PATH -cm greyscale \
+    $FIELDMAP_PATH -cm brain_colours_diverging_bwr -a 50.0 -dr -100 100
 
-# # Prompt user to approve the fieldmap
-# echo -e "\nDoes the fieldmap look good?"
-# echo "1. Yes"
-# echo "2. No, exit program"
-# read -p "Enter your choice (1 or 2): " fieldmap_approval
+# Prompt user to approve the fieldmap
+echo -e "\nDoes the fieldmap look good?"
+echo "1. Yes"
+echo "2. No, exit program"
+read -p "Enter your choice (1 or 2): " fieldmap_approval
 
-# case $fieldmap_approval in
-#     1)
-#         echo -e "\nFieldmap approved."
-#         ;;
-#     2)
-#         echo -e "\nExiting..."
-#         exit 1
-#         ;;
-#     *)
-#         echo -e "\nInvalid choice. Exiting..."
-#         exit 1
-#         ;;
-# esac
+case $fieldmap_approval in
+    1)
+        echo -e "\nFieldmap approved."
+        ;;
+    2)
+        echo -e "\nExiting..."
+        exit 1
+        ;;
+    *)
+        echo -e "\nInvalid choice. Exiting..."
+        exit 1
+        ;;
+esac
 
 # Create output directory for the optimizations
 OPTI_OUTPUT_DIR="${OUTPUT_PATH}derivatives/optimizations"
