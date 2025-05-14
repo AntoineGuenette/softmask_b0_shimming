@@ -1,6 +1,9 @@
 #!/bin/bash
+
 # Compute the mask used for analysis and register it to a reference EPI image
+#
 # Takes two parameters: the path to the reference EPI image and the path to the T1w image
+#
 # Outputs:
 # - T1w segmentation
 # - T1w registered to EPI
@@ -46,7 +49,7 @@ MASK_PATH=$REF_FOLDER_PATH/seg/sc_mask.nii.gz
 sct_create_mask -i $TARGET_PATH -p centerline,$SEG_PATH -size 25mm -f cylinder -o $MASK_PATH
 
 # Create spinal cord mask for T1w
-sct_deepseg -task seg_sc_contrast_agnostic -i $t1w_PATH -o $t1w_SEG_PATH -qc $t1w_folder_path/qc
+sct_deepseg spinalcord -i $t1w_PATH -o $t1w_SEG_PATH -qc $t1w_folder_path/qc
 
 # Register T1w to EPI
 sct_register_multimodal -i $t1w_PATH -iseg $t1w_SEG_PATH -d $TARGET_PATH -dseg $SEG_PATH -param step=1,type=seg,algo=centermass \

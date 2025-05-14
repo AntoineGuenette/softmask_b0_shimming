@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # This function registers the tSNR map to a reference EPI image
+#
 # Takes 3 arguments:
 # 1. The path to the reference folder
 # 2. The path to the T1w folder
@@ -11,7 +12,6 @@
 # - Registered tSNR map to reference
 # - Mean tSNR
 # - tSNR per level
-
 
 # Inputs
 REF_FOLDER_PATH=$1

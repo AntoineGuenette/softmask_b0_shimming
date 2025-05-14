@@ -14,7 +14,6 @@
 # - Detrended EPI
 # - Standard deviation of the EPI
 # - tSNR map
-#
 
 # Inputs
 EPI_60vol_PATH=$1
@@ -53,7 +52,7 @@ fslmaths $EPI_60vol_PATH -Tmean $EPI_mean_PATH
 
 # Get mask of the spinal cord
 MASK_PATH=$SEG_FOLDER_PATH/sc_seg.nii.gz
-sct_deepseg -task seg_sc_contrast_agnostic -i $EPI_mean_PATH -o $MASK_PATH -qc $QC_FOLDER_PATH
+sct_deepseg spinalcord -i $EPI_mean_PATH -o $MASK_PATH -qc $QC_FOLDER_PATH
 
 # Create mask centered around the spinal cord in EPI
 MOCO_MASK_PATH=$SEG_FOLDER_PATH/sc_mask.nii.gz
