@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo """
 This script runs all tSNR post-processing scripts for a given subject. The dicoms folder should be organized as follows:
 
