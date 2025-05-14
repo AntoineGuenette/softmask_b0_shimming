@@ -102,7 +102,7 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SEGMENTATION" ]; then
 else
     echo -e "\nCreating segmentation from magnitude image..."
     start_time=$(gdate +%s%3N)
-    sct_deepseg -i "${MPRAGE_PATH}" -c t1 -task seg_sc_contrast_agnostic -o "${FNAME_SEGMENTATION}" || exit
+    sct_deepseg spinalcord -i "${MPRAGE_PATH}" -o "${FNAME_SEGMENTATION}" || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
