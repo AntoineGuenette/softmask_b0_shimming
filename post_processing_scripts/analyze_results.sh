@@ -25,7 +25,7 @@ for CATEGORY in "${CATEGORIES[@]}"; do
    
     
     CATEGORY_PATH="$SORTED_DICOMS_PATH/$CATEGORY"
-    if [ $VERIFICATION == 1 ] && [ -d "$CATEGORY_PATH" ]; then
+    if [ $VERIFICATION == 1 ] && [ -f "${EPI_60vol_DIR_PATH}/sub-${SUBJECT_NAME}_bold_${CATEGORY}.nii.gz" ] && [ -f "${FMAP_DIR_PATH}/sub-${SUBJECT_NAME}_fmap_${CATEGORY}.nii.gz" ]; then
         echo -e "${CATEGORY} dicoms already sorted and converted to nifti. Skipping these steps...\n"
     else
         # Reorganize dicoms paths
@@ -90,16 +90,50 @@ for CATEGORY in "${CATEGORIES[@]}"; do
                 rm -rf "$NIFTI_PATH/$DIR"
             fi
         done
+
     fi
+
+    # Show fieldmap with magnitude
+    echo -e "Displaying ${CATEGORY} fieldmap with EPI image...\n"
+    fsleyes \
+        "${EPI_60vol_DIR_PATH}/sub-${SUBJECT_NAME}_bold_${CATEGORY}.nii.gz" -cm greyscale \
+        "${FMAP_DIR_PATH}/sub-${SUBJECT_NAME}_fmap_${CATEGORY}.nii.gz" -cm brain_colours_diverging_bwr -a 50.0 -dr -100 100
+
+    # Prompt user to approve the fieldmap
+    echo -e "Does the fieldmap look good?\n"
+    echo "1. Yes"
+    echo "2. No, exit program"
+    read -p "Enter your choice (1 or 2): " fieldmap_approval
+
+    case $fieldmap_approval in
+        1)
+            echo -e "Fieldmap approved.\n"
+            ;;
+        2)
+            echo -e "Exiting...\n"
+            exit 1
+            ;;
+        *)
+            echo -e "Invalid choice. Exiting...\n"
+            exit 1
+            ;;
+    esac
+
 done
 
-rm -rf "${OUTPUT_PATH}/derivatives/nifti"
+# Remove the NIFTI folder if it exists
+if [ -d "${OUTPUT_PATH}/derivatives/nifti" ]; then
+    echo -e "\nRemoving sorted NIFTI folder..."
+    rm -rf "${OUTPUT_PATH}/derivatives/nifti"
+fi
+
+
 
 # Remove the sorted dicoms folder if necessary
-        if [ -d "$SORTED_DICOMS_PATH" ]; then
-            echo -e "\nRemoving sorted dicoms folder..."
-            rm -r "$SORTED_DICOMS_PATH"
-        fi
+if [ -d "$SORTED_DICOMS_PATH" ]; then
+    echo -e "\nRemoving sorted dicoms folder..."
+    rm -r "$SORTED_DICOMS_PATH"
+fi
 
 # End of the script
 echo -e "\nProcessing complete."
