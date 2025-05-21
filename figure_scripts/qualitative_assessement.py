@@ -34,15 +34,14 @@ options = ['Baseline', 'DynShim_SCseg', 'DynShim_bin', 'DynShim_2levels', 'DynSh
 # Load the data
 script_dir = os.path.dirname(os.path.abspath(__file__))
 EPI_PATHS = [os.path.join(script_dir, f"../../2025.05.12-acdc_274/tSNR-acdc274/{option}/EPIs/{option}_EPI_mc_mean.nii.gz") for option in options]
-# EPI_PATHS = [os.path.join(script_dir, f"../../2025.05.12-acdc_274/tSNR-acdc274/{option}/warp/warp_EPI_to_REF.nii.gz") for option in options]
-MASK_PATH = os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/sct_bin_mask.nii.gz")
+MASK_PATHS = [os.path.join(script_dir, f"../../2025.05.12-acdc_274/tSNR-acdc274/centerlines/{option}_centerline.nii.gz") for option in options]
 
 EPIs = [nib.load(EPI_PATH) for EPI_PATH in EPI_PATHS]
-mask = nib.load(MASK_PATH)
-mask = resample_from_to(mask, EPIs[1], order=0)
+masks = [nib.load(MASK_PATH) for MASK_PATH in MASK_PATHS]
+masks= [resample_from_to(mask, EPI, order=0) for mask, EPI in zip(masks, EPIs)]
 
 # Get mask
-mask_data = mask.get_fdata().astype(bool)
+masks_data = [mask.get_fdata().astype(bool) for mask in masks]
     
 # Get the data
 crop_size = 20
@@ -51,7 +50,7 @@ data_crop = np.zeros((crop_size, crop_size, EPIs_data[0].shape[2]))
 mosaics = []
 
 # Crop the center of the data
-for EPI_data in EPIs_data:
+for EPI_data, mask_data in zip(EPIs_data, masks_data):
     for slice in range(EPI_data.shape[-1]):
         center = center_of_mass(mask_data[:, :, slice])
         if not np.isnan(center[0]) and not np.isnan(center[1]):
