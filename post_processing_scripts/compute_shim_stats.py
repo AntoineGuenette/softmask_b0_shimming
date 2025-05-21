@@ -23,23 +23,14 @@ os.makedirs(output_path, exist_ok=True)
 # Load the masks
 seg_mask_path = os.path.join(masks_path, "segmentation.nii.gz")
 nii_seg_mask = nib.load(seg_mask_path)
-seg_mask_data = nii_seg_mask.get_fdata()
-
 bin_mask_path = os.path.join(masks_path, "sct_bin_mask.nii.gz")
 nii_bin_mask = nib.load(bin_mask_path)
-bin_mask_data = nii_bin_mask.get_fdata()
-
 twolvl_mask_path = os.path.join(masks_path, "st_soft_mask_2lvls.nii.gz")
 nii_twolvl_mask = nib.load(twolvl_mask_path)
-twolvl_mask_data = nii_twolvl_mask.get_fdata()
-
 lin_mask_path = os.path.join(masks_path, "st_soft_mask_linear.nii.gz")
 nii_lin_mask = nib.load(lin_mask_path)
-lin_mask_data = nii_lin_mask.get_fdata()
-
 gaus_mask_path = os.path.join(masks_path, "st_soft_mask_gauss.nii.gz")
 nii_gaus_mask = nib.load(gaus_mask_path)
-gaus_mask_data = nii_gaus_mask.get_fdata()
 
 # Load the baseline data
 baseline_FMAP_path = os.path.join(FMAPs_path, f"sub-{subject_name}_fmap_baseline.nii.gz")
@@ -56,7 +47,7 @@ for category, mask in zip(categories, masks):
     FMAP_data = nii_FMAP.get_fdata()
 
     # Resample the masks to the EPI space
-    print(f"\nResampling {category} mask to EPI space...")
+    print(f"\nResampling {category} mask to fieldmap space...")
     nii_resampled_mask = resample_mask(mask, nii_FMAP)
     resampled_mask_data = nii_resampled_mask.get_fdata()
 

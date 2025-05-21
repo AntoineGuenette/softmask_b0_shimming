@@ -23,7 +23,6 @@ SORTED_DICOMS_PATH="${DICOMS_PATH%/*}/sorted_dicoms_opt/"
 CATEGORIES=("baseline" "seg" "bin" "2lvl" "lin" "gaus")
 for CATEGORY in "${CATEGORIES[@]}"; do
    
-    
     CATEGORY_PATH="$SORTED_DICOMS_PATH/$CATEGORY"
     if [ $VERIFICATION == 1 ] && [ -f "${EPI_60vol_DIR_PATH}/sub-${SUBJECT_NAME}_bold_${CATEGORY}.nii.gz" ] && [ -f "${FMAP_DIR_PATH}/sub-${SUBJECT_NAME}_fmap_${CATEGORY}.nii.gz" ]; then
         echo -e "${CATEGORY} dicoms already sorted and converted to nifti. Skipping these steps...\n"
@@ -126,8 +125,6 @@ if [ -d "${OUTPUT_PATH}/derivatives/nifti" ]; then
     echo -e "\nRemoving sorted NIFTI folder..."
     rm -rf "${OUTPUT_PATH}/derivatives/nifti"
 fi
-
-
 
 # Remove the sorted dicoms folder if necessary
 if [ -d "$SORTED_DICOMS_PATH" ]; then
