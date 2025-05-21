@@ -83,14 +83,18 @@ def violin_plot_rmses_subjects(df):
     # Formatting
     plt.xticks(ticks=[0, 1, 2, 3, 4, 5], labels=['Baseline\n(pas de shimming)', 'Binaire\nSegmentation', 'Binaire\nCylindrique', 'Pondéré\nDeux niveaux', 'Pondéré\nLinéaire', 'Pondéré\nGaussien'])
     plt.xlabel("Masque utilisé pour le shimming")
-    plt.ylabel('RMSE')
-    plt.title('Distribution tranche par tranche de la RMSE dans la région masquée')
+    plt.ylabel('RMSE dans le masque utilisé pour le shimming')
+    plt.title('Distribution tranche par tranche de la RMSE dans chaque masque utilisé lors de l’optimisation pour le shimming')
     plt.tight_layout()
     plt.ylim(-15, 190)
     plt.gca().margins(x=0.1)  # Add extra space between groups
     # Add horizontal gridlines
     plt.grid(axis='y')
-    plt.show()   
+
+    # Save the figure
+    output_path = "/Users/antoineguenette/Downloads"
+    output_file = os.path.join(output_path, "violin_plot_masks.png")
+    plt.savefig(output_file, dpi=300, bbox_inches='tight')
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 options = ['baseline', 'seg', 'bin', '2lvl', 'lin', 'gaus']

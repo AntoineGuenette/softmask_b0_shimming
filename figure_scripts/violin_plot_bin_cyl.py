@@ -83,29 +83,29 @@ def violin_plot_rmses_subjects(df):
     # Formatting
     plt.xticks(ticks=[0, 1, 2, 3, 4, 5], labels=['Baseline\n(pas de shimming)', 'Binaire\nSegmentation', 'Binaire\nCylindrique', 'Pondéré\nDeux niveaux', 'Pondéré\nLinéaire', 'Pondéré\nGaussien'])
     plt.xlabel("Masque utilisé pour le shimming")
-    plt.ylabel('RMSE dans la moelle épinière')
-    plt.title('Distribution tranche par tranche de la RMSE dans la moelle épinière')
+    plt.ylabel('RMSE dans le masque binaire cylindrique')
+    plt.title('Distribution tranche par tranche de la RMSE dans le masque binaire cylindrique')
     plt.tight_layout()
     plt.ylim(-15, 190)
     plt.gca().margins(x=0.1)  # Add extra space between groups
     # Add horizontal gridlines
     plt.grid(axis='y')
-    
+
     # Save the figure
     output_path = "/Users/antoineguenette/Downloads"
-    output_file = os.path.join(output_path, "violin_plot_SC.png")
-    plt.savefig(output_file, dpi=300, bbox_inches='tight')  
+    output_file = os.path.join(output_path, "violin_plot_bin_cyl.png")
+    plt.savefig(output_file, dpi=300, bbox_inches='tight')
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 options = ['baseline', 'seg', 'bin', '2lvl', 'lin', 'gaus']
 subject_paths = {
     "mask_paths": [
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
+                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/sct_bin_mask.nii.gz"),
+                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/sct_bin_mask.nii.gz"),
+                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/sct_bin_mask.nii.gz"),
+                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/sct_bin_mask.nii.gz"),
+                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/sct_bin_mask.nii.gz"),
+                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/sct_bin_mask.nii.gz"),
             ],
     "fm_paths": [os.path.join(script_dir, f"../../2025.05.12-acdc_274/fmap-acdc274/sub-acdc274_fmap_{option}.nii.gz") for option in options]
 }
