@@ -7,11 +7,11 @@ import pandas as pd
 import os
 
 def load_subject_data(subject_paths, name):
-    mask_imgs = [nib.load(mask_path) for mask_path in subject_paths["mask_paths"]]
+    mask_img = nib.load(subject_paths["mask_path"])
     fm_imgs = [nib.load(fm_path) for fm_path in subject_paths["fm_paths"]]
     
     # resample mask to fm resolution
-    mask_imgs = [resample_mask(mask_img, fm_img) for mask_img, fm_img in zip(mask_imgs, fm_imgs)]
+    mask_imgs = [resample_mask(mask_img, fm_img) for fm_img in fm_imgs]
     
     # Replace 0 with NaN in mask
     mask_imgs_data = [mask_img.get_fdata() for mask_img in mask_imgs]
@@ -85,36 +85,31 @@ def violin_plot_rmses_subjects(df):
     plt.xlabel("Masque utilisé pour le shimming")
     plt.ylabel('RMSE dans la moelle épinière')
     plt.title('Distribution tranche par tranche de la RMSE dans la moelle épinière')
+    means = subject_data['rmses_mean']
+    stds = subject_data['rmses_std']
+    for i, (mean, std) in enumerate(zip(means, stds)):
+        text = f"$\\mu$ : {mean:.1f} | $\\sigma$ : {std:.1f}"
+        plt.text(i, -5, text, ha='center', va='center', fontsize=10, fontweight='bold')
     plt.tight_layout()
-    plt.ylim(-15, 190)
+    plt.ylim(-10, 190)
     plt.gca().margins(x=0.1)  # Add extra space between groups
     # Add horizontal gridlines
     plt.grid(axis='y')
     
     # Save the figure
     output_path = "/Users/antoineguenette/Desktop/Scolaire/NeuroPoly/Stage_E25/Experiences/2025.05.12-acdc_274/figures"
-    output_file = os.path.join(output_path, "violin_plot_SC.png")
+    output_file = os.path.join(output_path, "violin_plot.png")
     plt.savefig(output_file, dpi=300, bbox_inches='tight')
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 options = ['baseline', 'seg', 'bin', '2lvl', 'lin', 'gaus']
 subject_paths = {
-    "mask_paths": [
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-                os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
-            ],
+    "mask_path": os.path.join(script_dir, "../../2025.05.12-acdc_274/sub-acdc274/derivatives/masks/segmentation.nii.gz"),
     "fm_paths": [os.path.join(script_dir, f"../../2025.05.12-acdc_274/fmap-acdc274/sub-acdc274_fmap_{option}.nii.gz") for option in options]
 }
 
 subject_data = load_subject_data(subject_paths, 'acdc274')
 compute_rmse_subject(subject_data)
-
-print(f"Mean RMSE: {subject_data['rmses_mean']}")
-print(f"Std RMSE: {subject_data['rmses_std']}")
 
 # create a DataFrame from the subject data
 df = make_df_from_subject_data([subject_data])
