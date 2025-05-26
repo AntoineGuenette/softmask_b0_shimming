@@ -59,6 +59,6 @@ for EPI_data, mask_data in zip(EPIs_data, masks_data):
 mosaic_repeated = np.concatenate(mosaics, axis=0)
 
 # Save the figure
-output_path = "/Users/antoineguenette/Downloads"
+output_path = "/Users/antoineguenette/Desktop/Scolaire/NeuroPoly/Stage_E25/Experiences/2025.05.12-acdc_274/figures"
 output_file = os.path.join(output_path, "all_EPIs.png")
 plt.imsave(output_file, mosaic_repeated, cmap='gray', vmin=0, vmax=200)
