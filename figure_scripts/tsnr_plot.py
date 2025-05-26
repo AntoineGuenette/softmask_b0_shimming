@@ -14,7 +14,7 @@ df_all_subjects = pd.read_csv(data_path, sep=";", decimal=",", engine="python", 
 f, axes = plt.subplots(1, 2, figsize=(15, 8))
 sns.set(style="whitegrid")
 
-# Plot 1: tSNR par niveau spinal
+# Plot 1: tSNR per spinal level
 plot1 = sns.lineplot(
     data=df_all_subjects,
     x='Spinal level', y='WA', hue='Condition',
@@ -26,7 +26,7 @@ plot1 = sns.lineplot(
 axes[0].grid(True)
 axes[0].set_title("tSNR par vertèbre")
 
-# Plot 2: Amélioration du tSNR par niveau spinal
+# Plot 2: tSNR improvement per spinal level
 plot2 = sns.lineplot(
     data=df_all_subjects,
     x='Spinal level', y='WA improvement', hue='Condition',
@@ -57,6 +57,6 @@ custom_labels = [legend_mapping.get(label, label) for label in labels]
 f.legend(handles, custom_labels, title='Masque utilisé', fontsize=10, title_fontsize=12, loc='upper left')
 
 # Save the figure
-output_path = "/Users/antoineguenette/Downloads"
+output_path = "/Users/antoineguenette/Desktop/Scolaire/NeuroPoly/Stage_E25/Experiences/2025.05.12-acdc_274/figures"
 output_file = os.path.join(output_path, "tSNR_plot.png")
 f.savefig(output_file, dpi=300, bbox_inches='tight')

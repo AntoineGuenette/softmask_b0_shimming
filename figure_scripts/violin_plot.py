@@ -92,9 +92,9 @@ def violin_plot_rmses_subjects(df):
     plt.grid(axis='y')
     
     # Save the figure
-    output_path = "/Users/antoineguenette/Downloads"
+    output_path = "/Users/antoineguenette/Desktop/Scolaire/NeuroPoly/Stage_E25/Experiences/2025.05.12-acdc_274/figures"
     output_file = os.path.join(output_path, "violin_plot_SC.png")
-    plt.savefig(output_file, dpi=300, bbox_inches='tight')  
+    plt.savefig(output_file, dpi=300, bbox_inches='tight')
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 options = ['baseline', 'seg', 'bin', '2lvl', 'lin', 'gaus']
