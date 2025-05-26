@@ -50,13 +50,17 @@ FNAME_NO_EXT="${FNAME_NO_EXT%.*}"
 EPI_mean_PATH="${EPI_FOLDER_PATH}/${OPT_NAME}_EPI_60vol_mean.nii.gz"
 fslmaths $EPI_60vol_PATH -Tmean $EPI_mean_PATH
 
-# Get mask of the spinal cord
-MASK_PATH=$SEG_FOLDER_PATH/sc_seg.nii.gz
-sct_deepseg spinalcord -i $EPI_mean_PATH -o $MASK_PATH -qc $QC_FOLDER_PATH
+# Get centerline of the spinal cord
+CENTERLINE_PATH=$SEG_FOLDER_PATH/sc_centerline.nii.gz
+sct_get_centerline -i $EPI_mean_PATH -method viewer -gap 5.0 -o $CENTERLINE_PATH -qc $QC_FOLDER_PATH
+
+# Get segmentation of the spinal cord
+SEG_PATH=$SEG_FOLDER_PATH/sc_seg.nii.gz
+sct_deepseg spinalcord -i $EPI_mean_PATH -o $SEG_PATH -qc $QC_FOLDER_PATH
 
 # Create mask centered around the spinal cord in EPI
 MOCO_MASK_PATH=$SEG_FOLDER_PATH/sc_mask.nii.gz
-sct_create_mask -i $EPI_mean_PATH -p centerline,$MASK_PATH -size 25mm -f cylinder -o $MOCO_MASK_PATH
+sct_create_mask -i $EPI_mean_PATH -p centerline,$CENTERLINE_PATH -size 25mm -f cylinder -o $MOCO_MASK_PATH
 
 # Apply motion correction
 EPI_mc_folder_path=$EPI_FOLDER_PATH/MOCO

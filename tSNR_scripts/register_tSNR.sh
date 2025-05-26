@@ -36,7 +36,7 @@ tSNR_PER_LEVEL_PATH=$INPUT_FOLDER_PATH/tSNR/tSNR_perlevel.csv
 
 # Register EPI to reference
 sct_register_multimodal -i $INPUT_EPI_PATH -iseg $INPUT_SEG_PATH -d $REF_EPI_PATH -dseg $REF_SEG_PATH -m $REF_MASK_PATH \
-    -param step=1,type=im,algo=slicereg,metric=CC,iter=20,poly=5,smooth=1 -qc $INPUT_FOLDER_PATH/qc \
+    -param step=1,type=seg,algo=slicereg,metric=CC,iter=20,poly=5,smooth=1 -qc $INPUT_FOLDER_PATH/qc \
     -o $EPI_REG_TO_REF -owarp $WARP_PATH -ofolder $INPUT_FOLDER_PATH/warp
 
 # Apply transformation to tSNR

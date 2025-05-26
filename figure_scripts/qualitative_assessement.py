@@ -34,7 +34,7 @@ options = ['Baseline', 'DynShim_SCseg', 'DynShim_bin', 'DynShim_2levels', 'DynSh
 # Load the data
 script_dir = os.path.dirname(os.path.abspath(__file__))
 EPI_PATHS = [os.path.join(script_dir, f"../../2025.05.12-acdc_274/tSNR-acdc274/{option}/EPIs/{option}_EPI_mc_mean.nii.gz") for option in options]
-MASK_PATHS = [os.path.join(script_dir, f"../../2025.05.12-acdc_274/tSNR-acdc274/centerlines/{option}_centerline.nii.gz") for option in options]
+MASK_PATHS = [os.path.join(script_dir, f"../../2025.05.12-acdc_274/tSNR-acdc274/{option}/seg/sc_centerline.nii.gz") for option in options]
 
 EPIs = [nib.load(EPI_PATH) for EPI_PATH in EPI_PATHS]
 masks = [nib.load(MASK_PATH) for MASK_PATH in MASK_PATHS]
