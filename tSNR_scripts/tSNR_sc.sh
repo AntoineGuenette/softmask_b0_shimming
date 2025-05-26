@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script computes the tSNR of a 60-volume EPI image
+# This function computes the tSNR of a 60-volume EPI image
 #
 # Takes two parameters:
 # 1. The path to the 60 volumes EPI image

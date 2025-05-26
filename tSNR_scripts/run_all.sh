@@ -43,6 +43,7 @@
 # - tSNR per level maps
 # - Reference files
 # - QC files
+# - CSV files containing the mean tSNR and tSNR per level
 
 # Check if the correct number of arguments is provided
 if [ "$#" -ne 2 ]; then
@@ -155,3 +156,8 @@ do
         "$SCRIPT_PATH/register_tSNR.sh" $REF_FOLDER_PATH $t1w_FOLDER_PATH $SHIM_PATH
     fi
 done
+
+# Organize all outputs in a single CSV file
+echo -e "\nOrganizing all outputs in a single CSV file..."
+"$SCRIPT_PATH/save_all_tSNR.py" $SUBJECT_NAME $OUTPUT_PATH
+echo -e "\n All tSNR data saved successfully in $OUTPUT_PATH"

@@ -10,8 +10,8 @@
 # Outputs:
 # - Registered EPI to reference
 # - Registered tSNR map to reference
-# - Mean tSNR
-# - tSNR per level
+# - CSV file containing the mean tSNR
+# - CSV file containing the tSNR per level
 
 # Inputs
 REF_FOLDER_PATH=$1
