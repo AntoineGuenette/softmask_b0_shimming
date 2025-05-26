@@ -12,6 +12,7 @@ OUTPUT_FILE = os.path.join(SUBJECT_PATH, "all_tSNR_data.csv")
 
 methods = ["Baseline", "DynShim_SCseg", "DynShim_bin", "DynShim_2levels", "DynShim_linear", "DynShim_gauss"]
 spinal_map = {
+    "1": "C1",
     "2": "C2",
     "3": "C3",
     "4": "C4",
@@ -21,7 +22,9 @@ spinal_map = {
     "8": "T1",
     "9": "T2",
     "10": "T3",
-    "11": "T4"
+    "11": "T4",
+    "12": "T5",
+    "13": "T6"
 }
 baseline_wa_map = {}
 
