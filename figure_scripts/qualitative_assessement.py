@@ -49,7 +49,10 @@ mosaics = []
 # Crop the center of the data
 for EPI_data, mask_data in zip(EPIs_data, masks_data):
     for slice in range(EPI_data.shape[-1]):
-        center = center_of_mass(mask_data[:, :, slice])
+        if not np.any(mask_data[:, :, slice]):
+            center = (EPI_data.shape[0] // 2, EPI_data.shape[1] // 2 - 10)
+        else:
+            center = center_of_mass(mask_data[:, :, slice])
         if not np.isnan(center[0]) and not np.isnan(center[1]):
             center = (int(center[0]), int(center[1]))
             data_crop[:, :, slice] = crop_center(EPI_data[:, :, slice], center, crop_size) 
