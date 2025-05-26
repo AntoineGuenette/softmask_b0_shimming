@@ -50,13 +50,20 @@ FNAME_NO_EXT="${FNAME_NO_EXT%.*}"
 EPI_mean_PATH="${EPI_FOLDER_PATH}/${OPT_NAME}_EPI_60vol_mean.nii.gz"
 fslmaths $EPI_60vol_PATH -Tmean $EPI_mean_PATH
 
-# Get centerline of the spinal cord
-CENTERLINE_PATH=$SEG_FOLDER_PATH/sc_centerline.nii.gz
-sct_get_centerline -i $EPI_mean_PATH -method viewer -gap 5.0 -o $CENTERLINE_PATH -qc $QC_FOLDER_PATH
-
 # Get segmentation of the spinal cord
 SEG_PATH=$SEG_FOLDER_PATH/sc_seg.nii.gz
 sct_deepseg spinalcord -i $EPI_mean_PATH -o $SEG_PATH -qc $QC_FOLDER_PATH
+
+# Validate segmentation
+echo -e "\nPlease validate the segmentation of the spinal cord. Use 'option+E' to edit the segmentation."
+echo -e "\nUse 'cmd+Q' when finished."
+fsleyes \
+    $EPI_mean_PATH -cm greyscale -dr 0 200 \
+    $SEG_PATH -cm blue
+
+# Get centerline of the spinal cord from the segmentation
+CENTERLINE_PATH=$SEG_FOLDER_PATH/sc_centerline.nii.gz
+sct_get_centerline -i $SEG_PATH -method fitseg -o $CENTERLINE_PATH -qc $QC_FOLDER_PATH
 
 # Create mask centered around the spinal cord in EPI
 MOCO_MASK_PATH=$SEG_FOLDER_PATH/sc_mask.nii.gz
