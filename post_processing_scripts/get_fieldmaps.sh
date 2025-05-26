@@ -3,8 +3,8 @@
 # Check if three arguments are provided
 if [ "$#" -ne 3 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: ./compare_softmask.sh <dicoms_path> <subject_name> <verficiation>"
-    echo "Example: ./compare_softmask.sh /path/to/dicoms subject_name 1"
+    echo "Usage: ./get_fieldmaps.sh <dicoms_path> <subject_name> <verficiation>"
+    echo "Example: ./get_fieldmaps.sh /path/to/dicoms subject_name 1"
     exit 1
 fi
 
@@ -16,7 +16,6 @@ VERIFICATION=$3
 # Set file paths
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 OUTPUT_PATH="${DICOMS_PATH%/*}/sub-$SUBJECT_NAME/"
-EPI_60vol_DIR_PATH="${DICOMS_PATH%/*}/epi_60vol-$SUBJECT_NAME/"
 FMAP_DIR_PATH="${DICOMS_PATH%/*}/fmap-$SUBJECT_NAME/"
 SORTED_DICOMS_PATH="${DICOMS_PATH%/*}/sorted_dicoms_opt/"
 
@@ -24,29 +23,19 @@ CATEGORIES=("baseline" "seg" "bin" "2lvl" "lin" "gaus")
 for CATEGORY in "${CATEGORIES[@]}"; do
    
     CATEGORY_PATH="$SORTED_DICOMS_PATH/$CATEGORY"
-    if [ $VERIFICATION == 1 ] && [ -f "${EPI_60vol_DIR_PATH}/sub-${SUBJECT_NAME}_bold_${CATEGORY}.nii.gz" ] && [ -f "${FMAP_DIR_PATH}/sub-${SUBJECT_NAME}_fmap_${CATEGORY}.nii.gz" ]; then
+    if [ $VERIFICATION == 1 ] && [ -f "${FMAP_DIR_PATH}/sub-${SUBJECT_NAME}_fmap_${CATEGORY}.nii.gz" ]; then
         echo -e "${CATEGORY} dicoms already sorted and converted to nifti. Skipping these steps...\n"
     else
         # Reorganize dicoms paths
         echo -e "Reorganizing ${CATEGORY} dicoms paths..."
         mkdir -p "$CATEGORY_PATH"
-        EPI_PATH=$(find "$DICOMS_PATH" -type d -iname "*ep2d_bold*" -iname "*_${CATEGORY}*")
         FMAP_PATHS=$(find "$DICOMS_PATH" -type d -iname "*gre_fmap_epi*" -iname "*_${CATEGORY}*")
 
-        if [ -d "$EPI_PATH" ]; then
-            cp -r "$EPI_PATH" "$CATEGORY_PATH/"
-        fi
         for FMAP_PATH in $FMAP_PATHS; do
             if [ -d "$FMAP_PATH" ]; then
                 cp -r "$FMAP_PATH" "$CATEGORY_PATH/"
             fi
         done
-
-        DIR_COUNT=$(find "$CATEGORY_PATH" -mindepth 1 -maxdepth 1 -type d | wc -l)
-        if [ "$DIR_COUNT" -ne 3 ]; then
-            echo "Error: Expected 3 directories for ${CATEGORY} dicoms, but found $DIR_COUNT."
-            exit 1
-        fi
 
         echo -e "All ${CATEGORY} dicoms sorted successfully.\n"
 
@@ -55,17 +44,6 @@ for CATEGORY in "${CATEGORIES[@]}"; do
         echo -e "Converting ${CATEGORY} dicoms to nifti..."
         st_dicom_to_nifti -i $CATEGORY_PATH --subject $SUBJECT_NAME -o $NIFTI_PATH
         echo -e "All ${CATEGORY} dicoms converted successfully.\n"
-
-        # Move and rename the EPI file
-        echo -e "Moving and renaming the EPI file...\n"
-        EPI_60vol=$(find $NIFTI_PATH/sub-$SUBJECT_NAME/func -name "sub-${SUBJECT_NAME}_bold.nii.gz")
-        
-        if [ -f "$EPI_60vol" ]; then
-            mkdir -p "$EPI_60vol_DIR_PATH"
-            NEW_EPI_60vol="${EPI_60vol_DIR_PATH}/sub-${SUBJECT_NAME}_bold_${CATEGORY}.nii.gz"
-            mv "$EPI_60vol" "$NEW_EPI_60vol"
-            EPI_60vol="$NEW_EPI_60vol"
-        fi
         
         # Move and rename the fieldmap file
         echo -e "Moving and renaming the fieldmap file...\n"
@@ -91,32 +69,6 @@ for CATEGORY in "${CATEGORIES[@]}"; do
         done
 
     fi
-
-    # Show fieldmap with magnitude
-    echo -e "Displaying ${CATEGORY} fieldmap with EPI image...\n"
-    fsleyes \
-        "${EPI_60vol_DIR_PATH}/sub-${SUBJECT_NAME}_bold_${CATEGORY}.nii.gz" -cm greyscale \
-        "${FMAP_DIR_PATH}/sub-${SUBJECT_NAME}_fmap_${CATEGORY}.nii.gz" -cm brain_colours_diverging_bwr -a 50.0 -dr -100 100
-
-    # Prompt user to approve the fieldmap
-    echo -e "Does the fieldmap look good?\n"
-    echo "1. Yes"
-    echo "2. No, exit program"
-    read -p "Enter your choice (1 or 2): " fieldmap_approval
-
-    case $fieldmap_approval in
-        1)
-            echo -e "Fieldmap approved.\n"
-            ;;
-        2)
-            echo -e "Exiting...\n"
-            exit 1
-            ;;
-        *)
-            echo -e "Invalid choice. Exiting...\n"
-            exit 1
-            ;;
-    esac
 
 done
 

@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
-echo """
-This script extracts the mean, standard deviation, RMSE, and time taken for different mask types
-from multiple terminal output .txt files within a directory.
 
-It takes one argument:
-1. Path to the directory containing terminal output files (*.txt)
+# This script extracts the mean, standard deviation, RMSE, and time taken for different mask types
+# from multiple terminal output .txt files within a directory.
 
-Output:
-- A dictionary with mask types as keys and the average of their respective statistics across all files.
-"""
+# It takes one argument:
+# 1. Path to the directory containing terminal output files (*.txt)
+
+# Output:
+# - A dictionary with mask types as keys and the average of their respective statistics across all files.
 
 if [ $# -ne 1 ]; then
     echo "Illegal number of parameters"
