@@ -1,9 +1,10 @@
 import nibabel as nib
 import numpy as np
 import matplotlib.pyplot as plt
+import os
+
 from scipy.ndimage import center_of_mass
 from nibabel.processing import resample_from_to
-import os
 
 def crop_center(data, center, size):
     """
@@ -43,11 +44,12 @@ masks_data = [mask.get_fdata().astype(bool) for mask in masks]
 # Get the data
 crop_size = 20
 EPIs_data = [EPI.get_fdata() for EPI in EPIs]
-data_crop = np.zeros((crop_size, crop_size, EPIs_data[0].shape[2]))
 mosaics = []
 
 # Crop the center of the data
 for EPI_data, mask_data in zip(EPIs_data, masks_data):
+    data_crop = np.zeros((crop_size, crop_size, EPIs_data[0].shape[2]))
+
     for slice in range(EPI_data.shape[-1]):
         if not np.any(mask_data[:, :, slice]):
             center = (EPI_data.shape[0] // 2, EPI_data.shape[1] // 2 - 10)
@@ -63,5 +65,5 @@ mosaic_repeated = np.concatenate(mosaics, axis=0)
 
 # Save the figure
 output_path = os.path.join(script_dir, "../../2025.05.12-acdc_274/figures")
-output_file = os.path.join(output_path, "all_EPIs.png")
+output_file = os.path.join(output_path, "epi_mosaic.png")
 plt.imsave(output_file, mosaic_repeated, cmap='gray', vmin=0, vmax=200)
