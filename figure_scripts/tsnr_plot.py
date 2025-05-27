@@ -58,6 +58,6 @@ custom_labels = [legend_mapping.get(label, label) for label in labels]
 f.legend(handles, custom_labels, title='Masque utilisé', fontsize=10, title_fontsize=12, loc='upper left')
 
 # Save the figure
-output_path = "/Users/antoineguenette/Desktop/Scolaire/NeuroPoly/Stage_E25/Experiences/2025.05.12-acdc_274/figures"
+output_path = os.path.join(script_dir, "../../2025.05.12-acdc_274/figures")
 output_file = os.path.join(output_path, "tSNR_plot.png")
 f.savefig(output_file, dpi=300, bbox_inches='tight')
