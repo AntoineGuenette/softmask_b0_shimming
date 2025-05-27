@@ -8,12 +8,13 @@ import re
 from PIL import Image, ImageEnhance, ImageOps
 
 # Option names
-options = ['segmentation', 'sct_bin_mask', 'st_soft_mask_2lvls', 'st_soft_mask_linear', 'st_soft_mask_gauss']
+options = ['segmentation', 'sct_bin_mask', 'st_soft_mask_pond_1', 'st_soft_mask_pond_2',
+           'st_soft_mask_pond_3', 'st_soft_mask_pond_4', 'st_soft_mask_pond_5']
 
 # Define the paths to the images
 script_path = os.path.dirname(os.path.abspath(__file__))
-subject_path = os.path.join(script_path, "../../2025.05.12-acdc_274")
-optimization_path = os.path.join(subject_path, 'sub-acdc274', 'derivatives', 'optimizations')
+subject_path = os.path.join(script_path, "../../2025.05.07-acdc_273-TESTS")
+optimization_path = os.path.join(subject_path, 'sub-acdc273', 'derivatives', 'optimizations')
 image_paths = [os.path.join(optimization_path, f'dynamic_shim_{option}', 'fig_shimmed_vs_unshimmed.png') for option in options]
 
 all_before_stats = []
@@ -26,8 +27,8 @@ for image_path, option in zip(image_paths, options):
     enhanced_image = ImageEnhance.Contrast(gray_image).enhance(2.0)
 
     # Define the boxes for cropping
-    before_box = (100, 120, 500, 200)
-    after_box = (700, 120, 1100, 200)
+    before_box = (80, 100, 520, 220)
+    after_box = (680, 100, 1120, 220)
     before_crop = enhanced_image.crop(before_box)
     after_crop = enhanced_image.crop(after_box)
 
@@ -71,13 +72,14 @@ for i, metric in enumerate(metrics):
                     ha='center', va='bottom')
 
 ax.set_xticks(x + bar_width * (len(metrics) - 1) / 2)
-masks = ['Binaire segmenation', 'Binaire cylindrique', 'Pondéré 2 niveaux', 'Pondéré linéaire', 'Pondéré gaussien']
+masks = ['Binaire segmenation', 'Binaire cylindrique', 'Pondération de 0.1', 'Pondération de 0.2',
+         'Pondération de 0.3', 'Pondération de 0.4', 'Pondération de 0.5']
 ax.set_xticklabels(masks, rotation=45)
 ax.set_ylabel("Valeur")
 ax.set_title("Comparaison des statistiques de simulation après shimming pour chaque méthode")
 ax.legend()
 
 # Save the figure
-output_path = os.path.join(script_path, "../../2025.05.12-acdc_274/figures")
+output_path = os.path.join(subject_path, "figures")
 output_file = os.path.join(output_path, "simulation_stats.png")
 plt.savefig(output_file, dpi=300, bbox_inches='tight')
