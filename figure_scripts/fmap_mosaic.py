@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 
 from scipy.ndimage import center_of_mass
-from nibabel.processing import resample_from_to
+from shimmingtoolbox.masking.mask_utils import resample_mask as st_resample_from_to
 from epi_mosaic import crop_center
 
 # Option names
@@ -17,11 +17,12 @@ FMAP_PATHS = [os.path.join(script_dir, f"../../2025.05.12-acdc_274/fmap-acdc274/
 EPI_PATHS = [os.path.join(script_dir, f"../../2025.05.12-acdc_274/tSNR-acdc274/{option}/EPIs/{option}_EPI_mc_mean.nii.gz") for option in options]
 MASK_PATHS = [os.path.join(script_dir, f"../../2025.05.12-acdc_274/tSNR-acdc274/{option}/seg/sc_centerline.nii.gz") for option in options]
 
-FMAPs = [nib.load(FMAP_PATH) for FMAP_PATH in FMAP_PATHS]
+
 EPIs = [nib.load(EPI_PATH) for EPI_PATH in EPI_PATHS]
 masks = [nib.load(MASK_PATH) for MASK_PATH in MASK_PATHS]
-masks = [resample_from_to(mask, EPI, order=0) for mask, EPI in zip(masks, EPIs)]
-FMAPs = [resample_from_to(FMAP, EPI, order=0) for FMAP, EPI in zip(FMAPs, EPIs)]
+masks = [st_resample_from_to(mask, EPI) for mask, EPI in zip(masks, EPIs)]
+FMAPs = [nib.load(FMAP_PATH) for FMAP_PATH in FMAP_PATHS]
+FMAPs = [st_resample_from_to(FMAP, EPI) for FMAP, EPI in zip(FMAPs, EPIs)]
 
 # Get mask
 masks_data = [mask.get_fdata().astype(bool) for mask in masks]
@@ -36,7 +37,7 @@ mosaics = []
 # Crop the center of the data
 for FMAP_data, mask_data in zip(FMAPs_data, masks_data):
     data_crop = np.zeros((crop_size, crop_size, FMAPs_data[0].shape[2]))
-
+    
     for slice in range(FMAP_data.shape[-1]):
         if not np.any(mask_data[:, :, slice]):
             center = (FMAP_data.shape[0] // 2, FMAP_data.shape[1] // 2 - 10)
