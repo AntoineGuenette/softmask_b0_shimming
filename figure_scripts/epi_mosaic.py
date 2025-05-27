@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 
 from scipy.ndimage import center_of_mass
-from nibabel.processing import resample_from_to
+from shimmingtoolbox.masking.mask_utils import resample_mask as st_resample_from_to
 
 def crop_center(data, center, size):
     """
@@ -36,7 +36,7 @@ MASK_PATHS = [os.path.join(script_dir, f"../../2025.05.12-acdc_274/tSNR-acdc274/
 
 EPIs = [nib.load(EPI_PATH) for EPI_PATH in EPI_PATHS]
 masks = [nib.load(MASK_PATH) for MASK_PATH in MASK_PATHS]
-masks= [resample_from_to(mask, EPI, order=0) for mask, EPI in zip(masks, EPIs)]
+masks= [st_resample_from_to(mask, EPI) for mask, EPI in zip(masks, EPIs)]
 
 # Get mask
 masks_data = [mask.get_fdata().astype(bool) for mask in masks]
