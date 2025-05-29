@@ -275,7 +275,8 @@ do
         --output-value-format "absolute" \
         --fatsat "yes" \
         --regularization-factor 0.3 \
-        --output "$OUTPUT_DIR"
+        --output "$OUTPUT_DIR" \
+        --verbose 'info'
 
     # Create two files with the same currents, with and without fatsat
     DYN_CURRENTS_DIR="${OUTPUT_DIR}/coefs_coil0_${COIL_NAME}_no_fatsat.txt"
