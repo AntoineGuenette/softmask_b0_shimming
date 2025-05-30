@@ -29,8 +29,8 @@ It includes all niftis and optimization files (currents for the coil, predicted 
 # Check if five arguments are provided
 if [ "$#" -ne 5 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: ./compare_softmask.sh <dicoms_path> <subject_name> <threshold> <blur_width> <verification>"
-    echo "Example: ./compare_softmask.sh /path/to/dicoms subject_name 25 9 1"
+    echo "Usage: ./compare_softmasks_pthr.sh <dicoms_path> <subject_name> <threshold> <blur_width> <verification>"
+    echo "Example: ./compare_softmasks_pthr.sh /path/to/dicoms subject_name 25 9 1"
     exit 1
 fi
 
