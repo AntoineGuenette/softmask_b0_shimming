@@ -8,8 +8,8 @@ import re
 from PIL import Image, ImageEnhance, ImageOps
 
 # Option names
-options = ['segmentation', 'st_bin_mask_pond_1e0',
-           'st_soft_mask_pond_1e-1', 'st_soft_mask_pond_1e-2', 'st_soft_mask_pond_1e-4']
+options = ['segmentation', 'sct_bin_mask',
+           'st_soft_mask_2lvls', 'st_soft_mask_linear', 'st_soft_mask_gauss']
 
 # Define the paths to the images
 script_path = os.path.dirname(os.path.abspath(__file__))
@@ -72,14 +72,14 @@ for i, metric in enumerate(metrics):
                     ha='center', va='bottom')
 
 ax.set_xticks(x + bar_width * (len(metrics) - 1) / 2)
-masks = ['Segmenation', 'Binaire (pondération de 1)', 'Pondération de 0.1',
-         'Pondération de 0.01', 'Pondération de 0.0001',]
+masks = ['Segmenation', 'Binaire', 'Pondéré 2 niveaux',
+         'Pondéré linéare', 'Pondéré gaussien']
 ax.set_xticklabels(masks, rotation=45)
 ax.set_ylabel("Valeur")
-ax.set_title("Comparaison des statistiques (pondérées) de simulation après shimming pour chaque méthode")
+ax.set_title("Comparaison des statistiques (non pondéré) de simulation après shimming pour chaque méthode")
 ax.legend()
 
 # Save the figure
 output_path = os.path.join(subject_path, "figures")
-output_file = os.path.join(output_path, "simulation_stats_weighted.png")
+output_file = os.path.join(output_path, "simulation_stats_non_weighted.png")
 plt.savefig(output_file, dpi=300, bbox_inches='tight')
