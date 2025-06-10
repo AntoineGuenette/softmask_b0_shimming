@@ -8,13 +8,13 @@ import re
 from PIL import Image, ImageEnhance, ImageOps
 
 # Option names
-options = ['segmentation', 'sct_bin_mask', 'st_soft_mask_pond_1', 'st_soft_mask_pond_2',
-           'st_soft_mask_pond_3', 'st_soft_mask_pond_4', 'st_soft_mask_pond_5']
+options = ['segmentation', 'st_bin_mask_pond_1e0',
+           'st_soft_mask_pond_1e-1', 'st_soft_mask_pond_1e-2', 'st_soft_mask_pond_1e-4']
 
 # Define the paths to the images
 script_path = os.path.dirname(os.path.abspath(__file__))
-subject_path = os.path.join(script_path, "../../2025.05.07-acdc_273-TESTS")
-optimization_path = os.path.join(subject_path, 'sub-acdc273', 'derivatives', 'optimizations')
+subject_path = os.path.join(script_path, "../../2025.05.12-acdc_274-TESTS")
+optimization_path = os.path.join(subject_path, 'sub-acdc274', 'derivatives', 'optimizations')
 image_paths = [os.path.join(optimization_path, f'dynamic_shim_{option}', 'fig_shimmed_vs_unshimmed.png') for option in options]
 
 all_before_stats = []
@@ -72,14 +72,14 @@ for i, metric in enumerate(metrics):
                     ha='center', va='bottom')
 
 ax.set_xticks(x + bar_width * (len(metrics) - 1) / 2)
-masks = ['Binaire segmenation', 'Binaire cylindrique', 'Pondération de 0.1', 'Pondération de 0.2',
-         'Pondération de 0.3', 'Pondération de 0.4', 'Pondération de 0.5']
+masks = ['Segmenation', 'Binaire (pondération de 1)', 'Pondération de 0.1',
+         'Pondération de 0.01', 'Pondération de 0.0001',]
 ax.set_xticklabels(masks, rotation=45)
 ax.set_ylabel("Valeur")
-ax.set_title("Comparaison des statistiques de simulation après shimming pour chaque méthode")
+ax.set_title("Comparaison des statistiques (pondérées) de simulation après shimming pour chaque méthode")
 ax.legend()
 
 # Save the figure
 output_path = os.path.join(subject_path, "figures")
-output_file = os.path.join(output_path, "simulation_stats.png")
+output_file = os.path.join(output_path, "simulation_stats_weighted.png")
 plt.savefig(output_file, dpi=300, bbox_inches='tight')
