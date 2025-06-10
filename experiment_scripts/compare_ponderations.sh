@@ -104,11 +104,11 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SEGMENTATION" ]; then
 else
     echo -e "\nCreating segmentation from magnitude image..."
     start_time=$(gdate +%s%3N)
-    sct_deepseg spinalcord -i "${MPRAGE_PATH}" -o "${FNAME_SEGMENTATION}" || exit
+    sct_deepseg_sc -i "${MPRAGE_PATH}" -o "${FNAME_SEGMENTATION}" -c 't1'|| exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "\nSegmentation mask (seg) created in $elapsed_time_sec seconds."
+    echo -e "\nSegmentation mask created in $elapsed_time_sec seconds."
 fi
 
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ]; then
@@ -120,7 +120,7 @@ else
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "\nBinary mask (bin) created in $elapsed_time_sec seconds."
+    echo -e "\nBinary mask created in $elapsed_time_sec seconds."
 fi
 
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ]; then
