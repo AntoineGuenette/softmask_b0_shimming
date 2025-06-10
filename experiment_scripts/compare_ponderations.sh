@@ -90,13 +90,11 @@ fi
 
 # File names of the masks
 FNAME_SEGMENTATION="${MASK_DIR}/segmentation.nii.gz"
-FNAME_BIN_MASK_SCT="${MASK_DIR}/sct_bin_mask.nii.gz"
 FNAME_BIN_MASK_SCT_FM="${MASK_DIR}/sct_bin_mask_fm.nii.gz"
-FNAME_SOFT_MASK_POND_1="${MASK_DIR}/st_soft_mask_pond_1.nii.gz"
-FNAME_SOFT_MASK_POND_2="${MASK_DIR}/st_soft_mask_pond_2.nii.gz"
-FNAME_SOFT_MASK_POND_3="${MASK_DIR}/st_soft_mask_pond_3.nii.gz"
-FNAME_SOFT_MASK_POND_4="${MASK_DIR}/st_soft_mask_pond_4.nii.gz"
-FNAME_SOFT_MASK_POND_5="${MASK_DIR}/st_soft_mask_pond_5.nii.gz"
+FNAME_BIN_MASK_POND_1e0="${MASK_DIR}/st_bin_mask_pond_1e0.nii.gz"
+FNAME_SOFT_MASK_POND_1en1="${MASK_DIR}/st_soft_mask_pond_1e-1.nii.gz"
+FNAME_SOFT_MASK_POND_1en2="${MASK_DIR}/st_soft_mask_pond_1e-2.nii.gz"
+FNAME_SOFT_MASK_POND_1en4="${MASK_DIR}/st_soft_mask_pond_1e-4.nii.gz"
 
 # Check if paths exist and skipping the creation of the masks if they do
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SEGMENTATION" ]; then
@@ -111,18 +109,6 @@ else
     echo -e "\nSegmentation mask created in $elapsed_time_sec seconds."
 fi
 
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ]; then
-    echo -e "\nBinary mask already exists. Skipping creation..."
-else
-    echo -e "\nCreating binary mask from segmentation..."
-    start_time=$(gdate +%s%3N)
-    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size "${DIAMETER}mm" -f cylinder -o "${FNAME_BIN_MASK_SCT}" || exit
-    end_time=$(gdate +%s%3N)
-    elapsed_time_ms=$((end_time - start_time))
-    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "\nBinary mask created in $elapsed_time_sec seconds."
-fi
-
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ]; then
     echo -e "\nBinary mask for fieldmap already exists. Skipping creation..."
 else
@@ -131,64 +117,52 @@ else
     sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size "${MASK_SIZE}mm" -f cylinder -o "${FNAME_BIN_MASK_SCT_FM}" || exit
 fi
 
-if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_1}" ]; then
-    echo -e "\n0.1 ponderation soft mask already exists. Skipping creation..."
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_POND_1e0" ]; then
+    echo -e "\nBinary mask already exists. Skipping creation..."
 else
-    echo -e "\nCreating 0.1 ponderation soft mask from segmentation..."
+    echo -e "\nCreating binary mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_1}" -t '2levels' -bw $BLUR_WIDTH -bv 0.1 || exit
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_BIN_MASK_POND_1e0}" -t '2levels' -bw $BLUR_WIDTH -bv 1 || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "0.1 ponderation  soft mask created in $elapsed_time_sec seconds."
+    echo -e "\nBinary mask created in $elapsed_time_sec seconds."
 fi
 
-if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_2}" ]; then
-    echo -e "\n0.2 ponderation soft mask already exists. Skipping creation..."
+if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_1en1}" ]; then
+    echo -e "\n1e-1 ponderation soft mask already exists. Skipping creation..."
 else
-    echo -e "\nCreating 0.2 ponderation soft mask from segmentation..."
+    echo -e "\nCreating 1e-1 ponderation soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_2}" -t '2levels' -bw $BLUR_WIDTH -bv 0.2 || exit
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_1en1}" -t '2levels' -bw $BLUR_WIDTH -bv 0.1|| exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "0.2 ponderation  soft mask created in $elapsed_time_sec seconds."
+    echo -e "1e-1 ponderation  soft mask created in $elapsed_time_sec seconds."
 fi
 
-if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_3}" ]; then
-    echo -e "\n0.3 ponderation soft mask already exists. Skipping creation..."
+if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_1en2}" ]; then
+    echo -e "\n1e-2 ponderation soft mask already exists. Skipping creation..."
 else
-    echo -e "\nCreating 0.3 ponderation soft mask from segmentation..."
+    echo -e "\nCreating 1e-2 ponderation soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_3}" -t '2levels' -bw $BLUR_WIDTH -bv 0.3 || exit
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_1en2}" -t '2levels' -bw $BLUR_WIDTH -bv 0.01 || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "0.3 ponderation  soft mask created in $elapsed_time_sec seconds."
+    echo -e "1e-2 ponderation  soft mask created in $elapsed_time_sec seconds."
 fi
 
-if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_4}" ]; then
-    echo -e "\n0.4 ponderation soft mask already exists. Skipping creation..."
+if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_1en4}" ]; then
+    echo -e "\n1e-4 ponderation soft mask already exists. Skipping creation..."
 else
-    echo -e "\nCreating 0.4 ponderation soft mask from segmentation..."
+    echo -e "\nCreating 1e-4 ponderation soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_4}" -t '2levels' -bw $BLUR_WIDTH -bv 0.4 || exit
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_1en4}" -t '2levels' -bw $BLUR_WIDTH -bv 0.0001 || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "0.4 ponderation  soft mask created in $elapsed_time_sec seconds."
-fi
-
-if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_5}" ]; then
-    echo -e "\n0.5 ponderation soft mask already exists. Skipping creation..."
-else
-    echo -e "\nCreating 0.5 ponderation soft mask from segmentation..."
-    start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_5}" -t '2levels' -bw $BLUR_WIDTH -bv 0.5 || exit
-    end_time=$(gdate +%s%3N)
-    elapsed_time_ms=$((end_time - start_time))
-    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "0.5 ponderation  soft mask created in $elapsed_time_sec seconds."
+    echo -e "1e-4 ponderation  soft mask created in $elapsed_time_sec seconds."
 fi
 
 echo -e "\nAll masks checked and created successfully."
@@ -197,11 +171,10 @@ echo -e "\nAll masks checked and created successfully."
 echo -e "\nDisplaying masks with magnitude image..."
 fsleyes \
     $MPRAGE_PATH -cm greyscale \
-    ${FNAME_SOFT_MASK_POND_1} -cm copper -a 50.0 \
-    ${FNAME_SOFT_MASK_POND_2} -cm copper -a 50.0 \
-    ${FNAME_SOFT_MASK_POND_3} -cm copper -a 50.0 \
-    ${FNAME_SOFT_MASK_POND_4} -cm copper -a 50.0 \
-    ${FNAME_SOFT_MASK_POND_5} -cm copper -a 50.0 \
+    ${FNAME_BIN_MASK_POND_1e0} -cm copper -a 50.0 \
+    ${FNAME_SOFT_MASK_POND_1en1} -cm copper -a 50.0 \
+    ${FNAME_SOFT_MASK_POND_1en2} -cm copper -a 50.0 \
+    ${FNAME_SOFT_MASK_POND_1en4} -cm copper -a 50.0 \
 
 # Promp user to approve the masks
 echo -e "\nDo the masks look good?"
@@ -277,12 +250,10 @@ fi
 # Define the masks in a list
 masks=(
     "$FNAME_SEGMENTATION"
-    "$FNAME_BIN_MASK_SCT"
-    "${FNAME_SOFT_MASK_POND_1}"
-    "${FNAME_SOFT_MASK_POND_2}"
-    "${FNAME_SOFT_MASK_POND_3}"
-    "${FNAME_SOFT_MASK_POND_4}"
-    "${FNAME_SOFT_MASK_POND_5}"
+    "${FNAME_BIN_MASK_POND_1e0}"
+    "${FNAME_SOFT_MASK_POND_1en1}"
+    "${FNAME_SOFT_MASK_POND_1en2}"
+    "${FNAME_SOFT_MASK_POND_1en4}"
 )
 
 # Run the shim for each mask
