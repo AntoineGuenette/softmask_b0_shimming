@@ -103,6 +103,11 @@ else
     echo -e "\nCreating segmentation from magnitude image..."
     start_time=$(gdate +%s%3N)
     sct_deepseg_sc -i "${MPRAGE_PATH}" -o "${FNAME_SEGMENTATION}" -c 't1'|| exit
+    # python run_inference_single_subject.py \
+    #     -i "${MPRAGE_PATH}" \
+    #     -path-model /Users/antoineguenette/spinalcordtoolbox/data/deepseg_models/model_seg_sc_contrast_agnostic_nnunet/nnUNetTrainer__nnUNetPlans__3d_fullres/ \
+    #     -use-best-checkpoint -use-gpu \
+    #     -o "${FNAME_SEGMENTATION}"
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -134,7 +139,7 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_2LVLS_ST" ]; then
 else
     echo -e "\nCreating 2 levels soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_2LVLS_ST}" -t '2levels' -bw $BLUR_WIDTH || exit
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_2LVLS_ST}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.5 || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -146,7 +151,7 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_LINEAR_ST" ]; then
 else
     echo -e "\nCreating linear soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_LINEAR_ST}" -t 'linear' -bw $BLUR_WIDTH || exit
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_LINEAR_ST}" -t 'linear' -w $BLUR_WIDTH -u 'mm' || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -158,7 +163,7 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_GAUSS_ST" ]; then
 else
     echo -e "\nCreating gaussian soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_GAUSS_ST}" -t 'gaussian' -bw $BLUR_WIDTH || exit
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_GAUSS_ST}" -t 'gaussian' -w $BLUR_WIDTH -u 'mm' || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
