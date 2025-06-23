@@ -102,6 +102,7 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SEGMENTATION" ]; then
 else
     echo -e "\nCreating segmentation from magnitude image..."
     start_time=$(gdate +%s%3N)
+    # sct_deepseg_sc -i "${MPRAGE_PATH}" -o "${FNAME_SEGMENTATION}" -c 't1'|| exit
     python run_inference_single_subject.py \
         -i "${MPRAGE_PATH}" \
         -path-model /Users/antoineguenette/spinalcordtoolbox/data/deepseg_models/model_seg_sc_contrast_agnostic_nnunet/nnUNetTrainer__nnUNetPlans__3d_fullres/ \
