@@ -105,7 +105,7 @@ else
     # sct_deepseg_sc -i "${MPRAGE_PATH}" -o "${FNAME_SEGMENTATION}" -c 't1'|| exit
     python run_inference_single_subject.py \
         -i "${MPRAGE_PATH}" \
-        -path-model /Users/antoineguenette/Desktop/Scolaire/NeuroPoly/Stage_E25/Experiences/spinalcordtoolbox/data/deepseg_models/model_seg_sc_contrast_agnostic_nnunet/nnUNetTrainer__nnUNetPlans__3d_fullres \
+        -path-model /Users/antoineguenette/Desktop/Scolaire/NeuroPoly/Stage_E25/Experiences/sct_7.0/data/deepseg_models/model_seg_sc_contrast_agnostic_nnunet/nnUNetTrainer__nnUNetPlans__3d_fullres \
         -use-best-checkpoint -use-gpu \
         -o "${FNAME_SEGMENTATION}"
     end_time=$(gdate +%s%3N)
