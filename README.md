@@ -53,4 +53,4 @@ Here are all the script folders :
 * [figure_scripts](https://github.com/AntoineGuenette/softmask_b0_shimming/tree/main/figure_scripts): Generate figures for comparing shimming techniques
 * [post_processing_scripts](https://github.com/AntoineGuenette/softmask_b0_shimming/tree/main/post_processing_scripts): Process the data
 * [tSNR_scripts](https://github.com/AntoineGuenette/softmask_b0_shimming/tree/main/tSNR_scripts): Process the data to generate tSNR measurements
-* [poster_scripts](https://github.com/AntoineGuenette/softmask_b0_shimming/tree/main/poster_scripts): Generate figures for the project presentation poster
+* [poster_scripts](https://github.com/AntoineGuenette/softmask_b0_shimming/tree/main/poster_scripts): Generate figures for the project presentation poster 
