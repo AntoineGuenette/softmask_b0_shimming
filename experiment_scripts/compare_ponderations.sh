@@ -35,8 +35,8 @@
 # Check if five arguments are provided
 if [ "$#" -ne 5 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: ./compare_ponderations.sh <dicoms_path> <subject_name> <diameter[mm]> <blur_width[mm]> <verification>"
-    echo "Example: ./compare_ponderations.sh /path/to/dicoms subject_name 25 6 1"
+    echo "Usage: $0 <dicoms_path> <subject_name> <diameter[mm]> <blur_width[mm]> <verification>"
+    echo "Example: $0 /path/to/dicoms subject_name 25 6 1"
     exit 1
 fi
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This script runs the entire experiment for a given subject. It is meant to be run from the command line after
-# the baseline MPrage, the baseline field map and one baseline EPI has been acquired. Your dicom folder should be organized as follows:
+# the baseline MPrage, the baseline field map. Your dicom folder should be organized as follows:
 
 # dicoms
 # ├── 01_baseline_mprage_t1w (mag)
@@ -16,15 +16,12 @@
 # |    ├── dicom1
 # |    ├── dicom2
 # |    └── ...
-# |-- 04_baseline_EPI (AP or PA)
-# |    ├── dicom1
-# |    ├── dicom2
-# |    └── ...
 
 # It takes five arguments:
 # 1. The path to the dicoms directory
 # 2. The name / tag of the subject
-# 3. The diameter of the binary mask
+# 3. The size of the binary mask
+# 3. The center of the binary mask
 # 4. The width of the blur zone. Must be a multiple of 3.
 # 5. Skip the creation/verification of masks and fieldmap if they already exist (0 for no, 1 for yes)
 
@@ -33,19 +30,22 @@
 # It includes all niftis and optimization files (currents for the coil, predicted B0 field, etc.)
 
 # Check if five arguments are provided
-if [ "$#" -ne 5 ]; then
+if [ "$#" -ne 6 ]; then
     echo "Illegal number of parameters"
-    echo "Usage: $0 <dicoms_path> <subject_name> <diameter[mm]> <blur_width> <verification>"
-    echo "Example: $0 /path/to/dicoms subject_name 25 6 1"
+    echo "Usage: $0 <dicoms_path> <subject_name> <size> <center> <blur_width> <verification>"
+    echo "Example: $0 /path/to/dicoms subject_name '10,10,10' '0,0,0' 6 1"
     exit 1
 fi
 
 # Assign the arguments to variables
 DICOMS_PATH=$1
 SUBJECT_NAME=$2
-DIAMETER=$3
-BLUR_WIDTH=$4
-VERIFICATION=$5
+SIZE=$3
+IFS=',' read -r -a SIZE_ARR <<< "$SIZE"
+CENTER=$4
+IFS=',' read -r -a CENTER_ARR <<< "$CENTER"
+BLUR_WIDTH=$5
+VERIFICATION=$6
 
 # Set file paths
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
@@ -70,14 +70,14 @@ else
 fi
 
 # Set ohter file paths
-MAGNITUDE_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}" -name "*magnitude1.nii.gz")
-PHASE1_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}" -name "*phase1.nii.gz")
-PHASE2_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}" -name "*phase2.nii.gz")
-EPI_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}/func" -name "*.nii.gz")
-MPRAGE_PATH="${OUTPUT_PATH}sub-${SUBJECT_NAME}/anat/sub-${SUBJECT_NAME}_T1w.nii.gz"
+RESP_PATH=$(find "${OUTPUT_PATH}sourcedata" -name "*.resp")
+MAGNITUDE_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}"/fmap -name "*magnitude1.nii.gz")
+PHASE1_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}"/fmap -name "*phase1.nii.gz")
+PHASE2_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}"/fmap -name "*phase2.nii.gz")
+MPRAGE_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}"/anat -name "*magnitude1.nii.gz")
 
 # Check if the files exist
-if [ -z "$MAGNITUDE_PATH" ] || [ -z "$PHASE1_PATH" ] || [ -z "$PHASE2_PATH" ] || [ -z "$EPI_PATH" ] || [ -z "$MPRAGE_PATH" ]; then
+if [ -z "$MAGNITUDE_PATH" ] || [ -z "$PHASE1_PATH" ] || [ -z "$PHASE2_PATH" ] || [ -z "$MPRAGE_PATH" ]; then
     echo "Error: One or more required NIfTI files are missing! Exiting..."
     exit 1
 fi
@@ -92,9 +92,7 @@ fi
 FNAME_SEGMENTATION="${MASK_DIR}/segmentation.nii.gz"
 FNAME_BIN_MASK_SCT="${MASK_DIR}/sct_bin_mask.nii.gz"
 FNAME_BIN_MASK_SCT_FM="${MASK_DIR}/sct_bin_mask_fm.nii.gz"
-FNAME_SOFT_MASK_2LVLS_ST="${MASK_DIR}/st_soft_mask_2lvls.nii.gz"
-FNAME_SOFT_MASK_LINEAR_ST="${MASK_DIR}/st_soft_mask_linear.nii.gz"
-FNAME_SOFT_MASK_GAUSS_ST="${MASK_DIR}/st_soft_mask_gauss.nii.gz"
+FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask.nii.gz"
 
 # Check if paths exist and skipping the creation of the masks if they do
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SEGMENTATION" ]; then
@@ -102,12 +100,10 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SEGMENTATION" ]; then
 else
     echo -e "\nCreating segmentation from magnitude image..."
     start_time=$(gdate +%s%3N)
-    # sct_deepseg_sc -i "${MPRAGE_PATH}" -o "${FNAME_SEGMENTATION}" -c 't1'|| exit
-    python run_inference_single_subject.py \
-        -i "${MPRAGE_PATH}" \
-        -path-model /Users/antoineguenette/Desktop/Scolaire/NeuroPoly/Stage_E25/Experiences/sct_7.0/data/deepseg_models/model_seg_sc_contrast_agnostic_nnunet/nnUNetTrainer__nnUNetPlans__3d_fullres \
-        -use-best-checkpoint -use-gpu \
-        -o "${FNAME_SEGMENTATION}"
+    st_mask box -i "${MPRAGE_PATH}" \
+        --size ${SIZE_ARR[0]} ${SIZE_ARR[1]} ${SIZE_ARR[2]} \
+        --center ${CENTER_ARR[0]} ${CENTER_ARR[1]} ${CENTER_ARR[2]} \
+        -o "${FNAME_SEGMENTATION}" || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -119,55 +115,43 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ]; then
 else
     echo -e "\nCreating binary mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size "${DIAMETER}mm" -f cylinder -o "${FNAME_BIN_MASK_SCT}" || exit
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_BIN_MASK_SCT}" -t '2levels' -w "$BLUR_WIDTH" -u 'mm' -b 1 || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
     echo -e "\nBinary mask created in $elapsed_time_sec seconds."
 fi
 
+# Extract 3D average magnitude image for fieldmap mask
+MAGNITUDE_3D_PATH="${MASK_DIR}/magnitude_avg.nii.gz"
+echo -e "\nAveraging time dimension of 4D magnitude image..."
+fslmaths "$MAGNITUDE_PATH" -Tmean "$MAGNITUDE_3D_PATH"
+
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ]; then
     echo -e "\nBinary mask for fieldmap already exists. Skipping creation..."
 else
-    echo -e "\nCreating binary mask for fieldmap from segmentation ..."
-    MASK_SIZE=$((DIAMETER + 2 * BLUR_WIDTH + 5))
-    sct_create_mask -i "${MPRAGE_PATH}" -p centerline,"${FNAME_SEGMENTATION}" -size "${MASK_SIZE}mm" -f cylinder -o "${FNAME_BIN_MASK_SCT_FM}" || exit
+    echo -e "\nCreating binary mask for fieldmap from average magnitude image..."
+    st_mask box -i "${MAGNITUDE_3D_PATH}" \
+        --size 40 30 10 \
+        --center 32 18 5 \
+        -o "${FNAME_BIN_MASK_SCT_FM}" || exit
+    # fslsplit "$FNAME_BIN_MASK_SCT_FM" "${MASK_DIR}/temp_mask_vol" -t
+    # NUM_FRAMES=$(fslval "$MAGNITUDE_PATH" dim4)
+    # THREE_D_MASK="${MASK_DIR}/temp_mask_vol0000.nii.gz"
+    # fslmerge -t "$FNAME_BIN_MASK_SCT_FM" $(yes "$THREE_D_MASK" | head -n $NUM_FRAMES)
+    # rm "${MASK_DIR}"/temp_mask_vol*.nii.gz
 fi
 
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_2LVLS_ST" ]; then
-    echo -e "\n2 levels soft mask already exists. Skipping creation..."
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_ST" ]; then
+    echo -e "\nsoft mask already exists. Skipping creation..."
 else
-    echo -e "\nCreating 2 levels soft mask from segmentation..."
+    echo -e "\nCreating soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_2LVLS_ST}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.5 || exit
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_ST}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.1 || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
     echo -e "2 levels soft mask created in $elapsed_time_sec seconds."
-fi
-
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_LINEAR_ST" ]; then
-    echo -e "\nLinear soft mask already exists. Skipping creation..."
-else
-    echo -e "\nCreating linear soft mask from segmentation..."
-    start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_LINEAR_ST}" -t 'linear' -w $BLUR_WIDTH -u 'mm' || exit
-    end_time=$(gdate +%s%3N)
-    elapsed_time_ms=$((end_time - start_time))
-    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "Linear soft mask created in $elapsed_time_sec seconds."
-fi
-
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_GAUSS_ST" ]; then
-    echo -e "\nGaussian soft mask already exists. Skipping creation..."
-else
-    echo -e "\nCreating gaussian soft mask from segmentation..."
-    start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_GAUSS_ST}" -t 'gaussian' -w $BLUR_WIDTH -u 'mm' || exit
-    end_time=$(gdate +%s%3N)
-    elapsed_time_ms=$((end_time - start_time))
-    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "Gaussian soft mask created in $elapsed_time_sec seconds."
 fi
 
 echo -e "\nAll masks checked and created successfully."
@@ -176,9 +160,7 @@ echo -e "\nAll masks checked and created successfully."
 echo -e "\nDisplaying masks with magnitude image..."
 fsleyes \
     $MPRAGE_PATH -cm greyscale \
-    $FNAME_SOFT_MASK_2LVLS_ST -cm copper -a 50.0 \
-    $FNAME_SOFT_MASK_LINEAR_ST -cm copper -a 50.0 \
-    $FNAME_SOFT_MASK_GAUSS_ST -cm copper -a 50.0 \
+    $FNAME_SOFT_MASK_ST -cm copper -a 50.0 \
     $FNAME_BIN_MASK_SCT -cm copper -a 50.0 \
 
 # Promp user to approve the masks
@@ -254,11 +236,8 @@ fi
 
 # Define the masks in a list
 masks=(
-    "$FNAME_SEGMENTATION"
     "$FNAME_BIN_MASK_SCT"
-    "$FNAME_SOFT_MASK_2LVLS_ST"
-    "$FNAME_SOFT_MASK_LINEAR_ST"
-    "$FNAME_SOFT_MASK_GAUSS_ST"
+    "$FNAME_SOFT_MASK_ST"
 )
 
 # Run the shim for each mask
@@ -267,12 +246,15 @@ do
     MASK_NAME=$(basename "$mask" .nii.gz)
     OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_${MASK_NAME}"
     echo -e "\nShimming the fieldmap with $MASK_NAME..."
-    st_b0shim dynamic \
+    st_b0shim realtime-dynamic \
         --coil $COIL_PATH $COIL_CONFIG_PATH \
+        --coil-riro $COIL_PATH $COIL_CONFIG_PATH \
         --fmap $FIELDMAP_PATH \
-        --anat $EPI_PATH \
-        --mask "$mask" \
+        --anat $MPRAGE_PATH \
+        --mask-static "$mask" \
+        --mask-riro "$FNAME_BIN_MASK_SCT_FM" \
         --mask-dilation-kernel-size 3 \
+        --resp $RESP_PATH \
         --optimizer-criteria 'rmse' \
         --optimizer-method "least_squares" \
         --slices "auto" \
@@ -281,7 +263,7 @@ do
         --fatsat "yes" \
         --regularization-factor 0.3 \
         --output "$OUTPUT_DIR" \
-        --verbose 'info'
+        --verbose 'debug'
 
     # Create two files with the same currents, with and without fatsat
     DYN_CURRENTS_DIR="${OUTPUT_DIR}/coefs_coil0_${COIL_NAME}_no_fatsat.txt"
