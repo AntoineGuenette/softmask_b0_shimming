@@ -49,11 +49,11 @@ VERIFICATION=$6
 
 # Set file paths
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
-COIL_PROFILES_DIR="$SCRIPT_DIR/../../coil_profiles"
-COIL_PATH="${COIL_PROFILES_DIR}/coil_profiles_NP15.nii.gz"
-COIL_CONFIG_PATH="${COIL_PROFILES_DIR}/NP15_config.json"
-COIL_NAME="$(grep '"name"' "$COIL_CONFIG_PATH" | sed -E 's/.*"name": *"([^"]+)".*/\1/')"
-echo Name of the chosen coil : $COIL_NAME
+# COIL_PROFILES_DIR="$SCRIPT_DIR/../../coil_profiles"
+# COIL_PATH="${COIL_PROFILES_DIR}/coil_profiles_NP15.nii.gz"
+# COIL_CONFIG_PATH="${COIL_PROFILES_DIR}/NP15_config.json"
+# COIL_NAME="$(grep '"name"' "$COIL_CONFIG_PATH" | sed -E 's/.*"name": *"([^"]+)".*/\1/')"
+# echo Name of the chosen coil : $COIL_NAME
 OUTPUT_PATH="${DICOMS_PATH%/*}/sub-$SUBJECT_NAME/"
 SORTED_DICOMS_PATH="${DICOMS_PATH%/*}/sorted_dicoms_opt/"
 
@@ -74,10 +74,10 @@ RESP_PATH=$(find "${OUTPUT_PATH}sourcedata" -name "*.resp")
 MAGNITUDE_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}"/fmap -name "*magnitude1.nii.gz")
 PHASE1_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}"/fmap -name "*phase1.nii.gz")
 PHASE2_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}"/fmap -name "*phase2.nii.gz")
-MPRAGE_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}"/anat -name "*magnitude1.nii.gz")
+ANAT_PATH=$(find "${OUTPUT_PATH}sub-${SUBJECT_NAME}"/anat -name "*magnitude1.nii.gz")
 
 # Check if the files exist
-if [ -z "$MAGNITUDE_PATH" ] || [ -z "$PHASE1_PATH" ] || [ -z "$PHASE2_PATH" ] || [ -z "$MPRAGE_PATH" ]; then
+if [ -z "$MAGNITUDE_PATH" ] || [ -z "$PHASE1_PATH" ] || [ -z "$PHASE2_PATH" ] || [ -z "$ANAT_PATH" ]; then
     echo "Error: One or more required NIfTI files are missing! Exiting..."
     exit 1
 fi
@@ -90,68 +90,41 @@ fi
 
 # File names of the masks
 FNAME_SEGMENTATION="${MASK_DIR}/segmentation.nii.gz"
-FNAME_BIN_MASK_SCT="${MASK_DIR}/sct_bin_mask.nii.gz"
-FNAME_BIN_MASK_SCT_FM="${MASK_DIR}/sct_bin_mask_fm.nii.gz"
-FNAME_SOFT_MASK_ST="${MASK_DIR}/st_soft_mask.nii.gz"
+FNAME_BIN_MASK="${MASK_DIR}/bin_mask.nii.gz"
+FNAME_SOFT_MASK="${MASK_DIR}/soft_mask.nii.gz"
+FNAME_BIN_MASK_FM="${MASK_DIR}/bin_mask_fm.nii.gz"
 
 # Check if paths exist and skipping the creation of the masks if they do
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SEGMENTATION" ]; then
     echo -e "\nSegmentation mask already exists. Skipping creation..."
 else
     echo -e "\nCreating segmentation from magnitude image..."
-    start_time=$(gdate +%s%3N)
-    st_mask box -i "${MPRAGE_PATH}" \
+    st_mask box -i "${ANAT_PATH}" \
         --size ${SIZE_ARR[0]} ${SIZE_ARR[1]} ${SIZE_ARR[2]} \
         --center ${CENTER_ARR[0]} ${CENTER_ARR[1]} ${CENTER_ARR[2]} \
         -o "${FNAME_SEGMENTATION}" || exit
-    end_time=$(gdate +%s%3N)
-    elapsed_time_ms=$((end_time - start_time))
-    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "\nSegmentation mask created in $elapsed_time_sec seconds."
 fi
 
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT" ]; then
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK" ]; then
     echo -e "\nBinary mask already exists. Skipping creation..."
 else
     echo -e "\nCreating binary mask from segmentation..."
-    start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_BIN_MASK_SCT}" -t '2levels' -w "$BLUR_WIDTH" -u 'mm' -b 1 || exit
-    end_time=$(gdate +%s%3N)
-    elapsed_time_ms=$((end_time - start_time))
-    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "\nBinary mask created in $elapsed_time_sec seconds."
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_BIN_MASK}" -t '2levels' -w "$BLUR_WIDTH" -u 'mm' -b 1 || exit
 fi
 
-# Extract 3D average magnitude image for fieldmap mask
-MAGNITUDE_3D_PATH="${MASK_DIR}/magnitude_avg.nii.gz"
-echo -e "\nAveraging time dimension of 4D magnitude image..."
-fslmaths "$MAGNITUDE_PATH" -Tmean "$MAGNITUDE_3D_PATH"
-
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_SCT_FM" ]; then
-    echo -e "\nBinary mask for fieldmap already exists. Skipping creation..."
-else
-    echo -e "\nCreating binary mask for fieldmap from average magnitude image..."
-    st_mask box -i "${MAGNITUDE_3D_PATH}" \
-        --size 40 30 10 \
-        --center 32 18 5 \
-        -o "${FNAME_BIN_MASK_SCT_FM}" || exit
-    # fslsplit "$FNAME_BIN_MASK_SCT_FM" "${MASK_DIR}/temp_mask_vol" -t
-    # NUM_FRAMES=$(fslval "$MAGNITUDE_PATH" dim4)
-    # THREE_D_MASK="${MASK_DIR}/temp_mask_vol0000.nii.gz"
-    # fslmerge -t "$FNAME_BIN_MASK_SCT_FM" $(yes "$THREE_D_MASK" | head -n $NUM_FRAMES)
-    # rm "${MASK_DIR}"/temp_mask_vol*.nii.gz
-fi
-
-if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_ST" ]; then
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK" ]; then
     echo -e "\nsoft mask already exists. Skipping creation..."
 else
     echo -e "\nCreating soft mask from segmentation..."
-    start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_ST}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.1 || exit
-    end_time=$(gdate +%s%3N)
-    elapsed_time_ms=$((end_time - start_time))
-    elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
-    echo -e "2 levels soft mask created in $elapsed_time_sec seconds."
+    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.1 || exit
+fi
+
+if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_FM" ]; then
+    echo -e "\nBinary mask for fieldmap already exists. Skipping creation..."
+else
+    echo -e "\nCreating binary mask for fieldmap from binary mask..."
+    st_mask create-softmask -i "${FNAME_BIN_MASK}" -o "${FNAME_BIN_MASK_FM}" -t '2levels' -w "$BLUR_WIDTH" -u 'mm' -b 1 || exit
+
 fi
 
 echo -e "\nAll masks checked and created successfully."
@@ -159,9 +132,9 @@ echo -e "\nAll masks checked and created successfully."
 # Show masks with magnitude
 echo -e "\nDisplaying masks with magnitude image..."
 fsleyes \
-    $MPRAGE_PATH -cm greyscale \
-    $FNAME_SOFT_MASK_ST -cm copper -a 50.0 \
-    $FNAME_BIN_MASK_SCT -cm copper -a 50.0 \
+    $ANAT_PATH -cm greyscale \
+    $FNAME_SOFT_MASK -cm copper -a 50.0 \
+    $FNAME_BIN_MASK -cm copper -a 50.0 \
 
 # Promp user to approve the masks
 echo -e "\nDo the masks look good?"
@@ -197,7 +170,7 @@ else
      --mag $MAGNITUDE_PATH \
      --unwrapper prelude \
      --gaussian-filter true \
-     --mask $FNAME_BIN_MASK_SCT_FM \
+     --mask $FNAME_BIN_MASK_FM \
      --sigma 1 \
      -o $FIELDMAP_PATH
 fi
@@ -234,43 +207,49 @@ if [ ! -d $OUTPUT_DIR ]; then
     mkdir $OUTPUT_DIR
 fi
 
-# Define the masks in a list
-masks=(
-    "$FNAME_BIN_MASK_SCT"
-    "$FNAME_SOFT_MASK_ST"
-)
+# Run the shim for the binary masks
+OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_binary_masks"
+echo -e "\nShimming the fieldmap with binary masks..."
+st_b0shim realtime-dynamic \
+    --scanner-coil-order 0,1 \
+    --scanner-coil-order-riro 0,1 \
+    --fmap $FIELDMAP_PATH \
+    --anat $ANAT_PATH \
+    --mask-static "$FNAME_BIN_MASK" \
+    --mask-riro "$FNAME_BIN_MASK" \
+    --mask-dilation-kernel-size 3 \
+    --resp $RESP_PATH \
+    --optimizer-criteria 'rmse' \
+    --optimizer-method "least_squares" \
+    --slices "auto" \
+    --output-file-format-scanner "chronological-coil" \
+    --output-value-format "absolute" \
+    --fatsat "yes" \
+    --regularization-factor 0.3 \
+    --output "$OUTPUT_DIR" \
+    --verbose 'debug'
 
-# Run the shim for each mask
-for mask in "${masks[@]}"
-do
-    MASK_NAME=$(basename "$mask" .nii.gz)
-    OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_${MASK_NAME}"
-    echo -e "\nShimming the fieldmap with $MASK_NAME..."
-    st_b0shim realtime-dynamic \
-        --coil $COIL_PATH $COIL_CONFIG_PATH \
-        --coil-riro $COIL_PATH $COIL_CONFIG_PATH \
-        --fmap $FIELDMAP_PATH \
-        --anat $MPRAGE_PATH \
-        --mask-static "$mask" \
-        --mask-riro "$FNAME_BIN_MASK_SCT_FM" \
-        --mask-dilation-kernel-size 3 \
-        --resp $RESP_PATH \
-        --optimizer-criteria 'rmse' \
-        --optimizer-method "least_squares" \
-        --slices "auto" \
-        --output-file-format-coil "chronological-coil" \
-        --output-value-format "absolute" \
-        --fatsat "yes" \
-        --regularization-factor 0.3 \
-        --output "$OUTPUT_DIR" \
-        --verbose 'debug'
-
-    # Create two files with the same currents, with and without fatsat
-    DYN_CURRENTS_DIR="${OUTPUT_DIR}/coefs_coil0_${COIL_NAME}_no_fatsat.txt"
-    DYN_CURRENTS_MODIFIED_DIR="${OUTPUT_DIR}/coefs_coil0_${COIL_NAME}_SAME_CURRENTS_FATSAT.txt"
-    fatsat=$(sed -n '1p' "$DYN_CURRENTS_DIR")
-    sed 'p' "$DYN_CURRENTS_DIR" > "$DYN_CURRENTS_MODIFIED_DIR"
-done
+# Run the shim for the soft masks
+OUTPUT_DIR="${OPTI_OUTPUT_DIR}/dynamic_shim_soft_masks"
+echo -e "\nShimming the fieldmap with soft masks..."
+st_b0shim realtime-dynamic \
+    --scanner-coil-order 0,1 \
+    --scanner-coil-order-riro 0,1 \
+    --fmap $FIELDMAP_PATH \
+    --anat $ANAT_PATH \
+    --mask-static "$FNAME_SOFT_MASK" \
+    --mask-riro "$FNAME_SOFT_MASK" \
+    --mask-dilation-kernel-size 3 \
+    --resp $RESP_PATH \
+    --optimizer-criteria 'rmse' \
+    --optimizer-method "least_squares" \
+    --slices "auto" \
+    --output-file-format-scanner "chronological-coil" \
+    --output-value-format "absolute" \
+    --fatsat "yes" \
+    --regularization-factor 0.3 \
+    --output "$OUTPUT_DIR" \
+    --verbose 'debug'
 
 # Remove the sorted dicoms folder if necessary
 if [ -d "$SORTED_DICOMS_PATH" ]; then
