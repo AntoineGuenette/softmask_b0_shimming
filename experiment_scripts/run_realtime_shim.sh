@@ -214,7 +214,7 @@ st_b0shim realtime-dynamic \
     --scanner-coil-order 0,1 \
     --scanner-coil-order-riro 0,1 \
     --fmap $FIELDMAP_PATH \
-    --anat $ANAT_PATH \
+    --target $ANAT_PATH \
     --mask-static "$FNAME_BIN_MASK" \
     --mask-riro "$FNAME_BIN_MASK" \
     --mask-dilation-kernel-size 3 \

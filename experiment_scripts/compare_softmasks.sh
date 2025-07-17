@@ -270,7 +270,7 @@ do
     st_b0shim dynamic \
         --coil $COIL_PATH $COIL_CONFIG_PATH \
         --fmap $FIELDMAP_PATH \
-        --anat $EPI_PATH \
+        --target $EPI_PATH \
         --mask "$mask" \
         --mask-dilation-kernel-size 3 \
         --optimizer-criteria 'rmse' \
