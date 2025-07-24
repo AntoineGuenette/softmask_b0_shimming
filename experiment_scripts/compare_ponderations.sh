@@ -122,7 +122,7 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_POND_1e0" ]; then
 else
     echo -e "\nCreating binary mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_BIN_MASK_POND_1e0}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 1 || exit
+    st_mask softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_BIN_MASK_POND_1e0}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 1 || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -134,7 +134,7 @@ if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_1en1}" ]; then
 else
     echo -e "\nCreating 1e-1 ponderation soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_1en1}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.1|| exit
+    st_mask softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_1en1}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.1|| exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -146,7 +146,7 @@ if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_1en2}" ]; then
 else
     echo -e "\nCreating 1e-2 ponderation soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_1en2}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.01 || exit
+    st_mask softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_1en2}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.01 || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -158,7 +158,7 @@ if [ $VERIFICATION == 1 ] && [ -f "${FNAME_SOFT_MASK_POND_1en4}" ]; then
 else
     echo -e "\nCreating 1e-4 ponderation soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_1en4}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.0001 || exit
+    st_mask softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_POND_1en4}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.0001 || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)

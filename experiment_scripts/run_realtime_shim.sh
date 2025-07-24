@@ -109,21 +109,21 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK" ]; then
     echo -e "\nBinary mask already exists. Skipping creation..."
 else
     echo -e "\nCreating binary mask from segmentation..."
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_BIN_MASK}" -t '2levels' -w "$BLUR_WIDTH" -u 'mm' -b 1 || exit
+    st_mask softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_BIN_MASK}" -t '2levels' -w "$BLUR_WIDTH" -u 'mm' -b 1 || exit
 fi
 
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK" ]; then
     echo -e "\nsoft mask already exists. Skipping creation..."
 else
     echo -e "\nCreating soft mask from segmentation..."
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.1 || exit
+    st_mask softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.1 || exit
 fi
 
 if [ $VERIFICATION == 1 ] && [ -f "$FNAME_BIN_MASK_FM" ]; then
     echo -e "\nBinary mask for fieldmap already exists. Skipping creation..."
 else
     echo -e "\nCreating binary mask for fieldmap from binary mask..."
-    st_mask create-softmask -i "${FNAME_BIN_MASK}" -o "${FNAME_BIN_MASK_FM}" -t '2levels' -w "$BLUR_WIDTH" -u 'mm' -b 1 || exit
+    st_mask softmask -i "${FNAME_BIN_MASK}" -o "${FNAME_BIN_MASK_FM}" -t '2levels' -w "$BLUR_WIDTH" -u 'mm' -b 1 || exit
 
 fi
 
@@ -236,7 +236,7 @@ st_b0shim realtime-dynamic \
     --scanner-coil-order 0,1 \
     --scanner-coil-order-riro 0,1 \
     --fmap $FIELDMAP_PATH \
-    --anat $ANAT_PATH \
+    --target $ANAT_PATH \
     --mask-static "$FNAME_SOFT_MASK" \
     --mask-riro "$FNAME_SOFT_MASK" \
     --mask-dilation-kernel-size 3 \

@@ -105,11 +105,11 @@ else
     echo -e "\nBinary mask (bin) created in $elapsed_time_sec seconds."
 
     echo -e "\nCreating binary mask from segmentation for fieldmap..."
-    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_BIN_MASK_SCT_FM}" -b 'constant' -bw $((BLUR_WIDTH + 6)) -bv 1 || exit
+    st_mask softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_BIN_MASK_SCT_FM}" -b 'constant' -bw $((BLUR_WIDTH + 6)) -bv 1 || exit
     
     echo -e "\nCreating constant soft mask from the binary mask..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_CST_ST}" -b 'constant' -bw $BLUR_WIDTH || exit
+    st_mask softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_CST_ST}" -b 'constant' -bw $BLUR_WIDTH || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -117,7 +117,7 @@ else
     
     echo -e "\nCreating linear soft mask from the binary mask..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_LIN_ST}" -b 'linear' -bw $BLUR_WIDTH || exit
+    st_mask softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_LIN_ST}" -b 'linear' -bw $BLUR_WIDTH || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -125,7 +125,7 @@ else
     
     echo -e "\nCreating gaussian soft mask from the binary mask..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_GSS_ST}" -b 'gaussian' -bw $BLUR_WIDTH || exit
+    st_mask softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_GSS_ST}" -b 'gaussian' -bw $BLUR_WIDTH || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)

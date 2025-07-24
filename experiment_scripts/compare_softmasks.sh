@@ -139,7 +139,7 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_2LVLS_ST" ]; then
 else
     echo -e "\nCreating 2 levels soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_2LVLS_ST}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.5 || exit
+    st_mask softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_2LVLS_ST}" -t '2levels' -w $BLUR_WIDTH -u 'mm' -b 0.5 || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -151,7 +151,7 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_LINEAR_ST" ]; then
 else
     echo -e "\nCreating linear soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_LINEAR_ST}" -t 'linear' -w $BLUR_WIDTH -u 'mm' || exit
+    st_mask softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_LINEAR_ST}" -t 'linear' -w $BLUR_WIDTH -u 'mm' || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)
@@ -163,7 +163,7 @@ if [ $VERIFICATION == 1 ] && [ -f "$FNAME_SOFT_MASK_GAUSS_ST" ]; then
 else
     echo -e "\nCreating gaussian soft mask from segmentation..."
     start_time=$(gdate +%s%3N)
-    st_mask create-softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_GAUSS_ST}" -t 'gaussian' -w $BLUR_WIDTH -u 'mm' || exit
+    st_mask softmask -i "${FNAME_SEGMENTATION}" -o "${FNAME_SOFT_MASK_GAUSS_ST}" -t 'gaussian' -w $BLUR_WIDTH -u 'mm' || exit
     end_time=$(gdate +%s%3N)
     elapsed_time_ms=$((end_time - start_time))
     elapsed_time_sec=$(echo "scale=3; $elapsed_time_ms / 1000" | bc)

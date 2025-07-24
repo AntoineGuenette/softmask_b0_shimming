@@ -97,13 +97,13 @@ else
     # Create masks
     echo -e "\nCreating binary masks..."
     st_mask threshold -i $MAGNITUDE_PATH --thr $THRESHOLD -o $FNAME_BIN_MASK_SCT || exit
-    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_BIN_MASK_SCT_FM}" -b 'constant' -bw $((BLUR_WIDTH + 15)) -bv 1 || exit
+    st_mask softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_BIN_MASK_SCT_FM}" -b 'constant' -bw $((BLUR_WIDTH + 15)) -bv 1 || exit
     echo -e "\nCreating constant soft mask from the binary mask..."
-    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_CST_ST}" -b 'constant' -bw $BLUR_WIDTH || exit
+    st_mask softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_CST_ST}" -b 'constant' -bw $BLUR_WIDTH || exit
     echo -e "\nCreating linear soft mask from the binary mask..."
-    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_LIN_ST}" -b 'linear' -bw $BLUR_WIDTH || exit
+    st_mask softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_LIN_ST}" -b 'linear' -bw $BLUR_WIDTH || exit
     echo -e "\nCreating gaussian soft mask from the binary mask..."
-    st_mask create-softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_GSS_ST}" -b 'gaussian' -bw $BLUR_WIDTH || exit
+    st_mask softmask -i "${FNAME_BIN_MASK_SCT}" -o "${FNAME_SOFT_MASK_GSS_ST}" -b 'gaussian' -bw $BLUR_WIDTH || exit
 
     # Show masks with magnitude
     echo -e "\nDisplaying masks with magnitude image..."
