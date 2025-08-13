@@ -28,3 +28,8 @@ cd ./experiment_script/
 ```
 ./compare_ponderations.sh <dicoms_path> <subject_name> <diameter[mm]> <blur_width[mm]> <verification>
 ```
+
+* [run_realtime_shim.sh](https://github.com/AntoineGuenette/softmask_b0_shimming/blob/main/experiment_scripts/run_realtime_shim.sh) : This script is used with a phantom to compare dynamic B0 real-time shimming with a binary mask and a softmask.
+```
+./run_realtime_shim.sh <dicoms_path> <subject_name> <size> <center> <blur_width> <verification>
+```
